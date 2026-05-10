@@ -1,0 +1,13 @@
+[dependencies.creative-writing-skills]
+url = "git@github.com:haowjy/creative-writing-skills.git"
+
+[dependencies.meridian-dev-workflow]
+url = "git@github.com:haowjy/meridian-dev-workflow.git"
+
+[settings]
+targets = [
+    ".opencode",
+    ".claude",
+    ".codex",
+]
+models_cache_ttl_hours = 24

@@ -1,0 +1,474 @@
+@import 'tailwindcss';
+@import 'lenis/dist/lenis.css';
+
+@import '@fontsource/dm-serif-display/400.css';
+@import '@fontsource-variable/jetbrains-mono';
+@import '@fontsource/ibm-plex-sans';
+@import '@fontsource/ibm-plex-sans/500.css';
+@import '@fontsource/ibm-plex-sans/400-italic.css';
+
+:root {
+  color-scheme: light;
+
+  --paper: #f2ebd8;
+  --paper-edge: #e9dfc6;
+  --paper-deep: #dccfb0;
+  --paper-veil: #f2ebd8c0;
+
+  --ink: #14110f;
+  --ink-soft: #2b2722;
+  --ink-mute: #6f6759;
+  --ink-fade: #a99f8a;
+
+  --jade: #1f665e;
+  --jade-deep: #143f3a;
+  --jade-bright: #2e8c82;
+  --jade-soft: #7db8b0;
+  --jade-veil: #1f665e14;
+
+  --amber: #b57823;
+  --amber-deep: #8a5916;
+
+  --chart-1: var(--jade);
+  --chart-2: var(--jade-soft);
+  --chart-peak: var(--amber);
+  --chart-mute: var(--ink-fade);
+  --chart-track: var(--paper-deep);
+
+  --rule: #14110f22;
+  --rule-strong: #14110f44;
+  --grain-opacity: 0.04;
+  --shadow-soft: 0 1px 2px #14110f0f, 0 8px 24px #14110f0a;
+
+  --type-display-xxl: clamp(5rem, 12vw + 1rem, 14rem);
+  --type-display-xl: clamp(4rem, 8vw + 1rem, 9rem);
+  --type-display-l: clamp(3rem, 4.5vw + 1rem, 5rem);
+  --type-display-m: clamp(2rem, 2vw + 1rem, 2.75rem);
+  --type-h2: 1.5rem;
+  --type-h3: 1.125rem;
+  --type-body: 1.0625rem;
+  --type-body-s: 0.9375rem;
+  --type-meta: 0.8125rem;
+  --type-micro: 0.6875rem;
+
+  --leading-tight: 1.05;
+  --leading-snug: 1.25;
+  --leading-body: 1.55;
+  --leading-loose: 1.7;
+
+  --tracking-display: -0.025em;
+  --tracking-tight: -0.005em;
+  --tracking-meta: 0.12em;
+
+  --font-display: 'DM Serif Display', serif;
+  --font-body: 'IBM Plex Sans', sans-serif;
+  --font-mono: 'JetBrains Mono Variable', 'JetBrains Mono', monospace;
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  --paper: #0e0d0b;
+  --paper-edge: #161412;
+  --paper-deep: #1f1c18;
+  --paper-veil: #0e0d0bc0;
+
+  --ink: #ece3cd;
+  --ink-soft: #c8bfa9;
+  --ink-mute: #8c8472;
+  --ink-fade: #4a453b;
+
+  --jade: #5fb5ab;
+  --jade-deep: #3f8a82;
+  --jade-bright: #8dd4cb;
+  --jade-soft: #2e5f5a;
+  --jade-veil: #5fb5ab1a;
+
+  --amber: #e0a23e;
+  --amber-deep: #b8821f;
+
+  --chart-1: var(--jade);
+  --chart-2: var(--jade-bright);
+  --chart-peak: var(--amber);
+  --chart-mute: var(--ink-fade);
+  --chart-track: var(--paper-deep);
+
+  --rule: #ece3cd22;
+  --rule-strong: #ece3cd44;
+  --grain-opacity: 0.06;
+  --shadow-soft: 0 1px 2px #00000040, 0 8px 24px #00000030;
+}
+
+@theme inline {
+  /* Wipe only the namespaces where Tailwind's defaults would conflict
+     with our design language (colors and fonts). Keep spacing, breakpoints,
+     radii, etc. so the standard utilities work as expected. */
+  --color-*: initial;
+  --font-*: initial;
+
+  --color-paper: var(--paper);
+  --color-paper-edge: var(--paper-edge);
+  --color-paper-deep: var(--paper-deep);
+  --color-paper-veil: var(--paper-veil);
+
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-mute: var(--ink-mute);
+  --color-ink-fade: var(--ink-fade);
+
+  --color-jade: var(--jade);
+  --color-jade-deep: var(--jade-deep);
+  --color-jade-bright: var(--jade-bright);
+  --color-jade-soft: var(--jade-soft);
+  --color-jade-veil: var(--jade-veil);
+
+  --color-amber: var(--amber);
+  --color-amber-deep: var(--amber-deep);
+
+  --color-rule: var(--rule);
+  --color-rule-strong: var(--rule-strong);
+
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
+  --font-mono: var(--font-mono);
+
+  --text-display-xxl: var(--type-display-xxl);
+  --text-display-xl: var(--type-display-xl);
+  --text-display-l: var(--type-display-l);
+  --text-display-m: var(--type-display-m);
+  --text-h2: var(--type-h2);
+  --text-h3: var(--type-h3);
+  --text-body: var(--type-body);
+  --text-body-s: var(--type-body-s);
+  --text-meta: var(--type-meta);
+  --text-micro: var(--type-micro);
+
+  --leading-tight: var(--leading-tight);
+  --leading-snug: var(--leading-snug);
+  --leading-body: var(--leading-body);
+  --leading-loose: var(--leading-loose);
+
+  --tracking-display: var(--tracking-display);
+  --tracking-tight: var(--tracking-tight);
+  --tracking-meta: var(--tracking-meta);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+/* Lenis owns smooth scroll — native scroll-behavior would fight it.
+   Hash-link jumps are handled by Lenis automatically when ReactLenis is mounted at root. */
+
+body {
+  margin: 0;
+  background-color: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: var(--type-body);
+  line-height: var(--leading-body);
+}
+
+a {
+  color: inherit;
+}
+
+.site-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.site-main {
+  flex: 1;
+  width: min(1100px, 100% - 2.5rem);
+  margin: 0 auto;
+  padding-block: 4.5rem 4.5rem;
+}
+
+.site-theme-toggle-corner {
+  position: fixed;
+  top: 1rem;
+  right: 1.25rem;
+  z-index: 30;
+}
+
+.site-header__mobile-toggle {
+  display: none;
+}
+
+.site-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  transition: background-color 200ms ease, backdrop-filter 200ms ease;
+}
+
+.site-header.is-scrolled {
+  backdrop-filter: blur(12px);
+  background-color: var(--paper-veil);
+  border-bottom: 1px solid var(--rule-strong);
+}
+
+.site-header__inner {
+  width: min(1100px, 100% - 2.5rem);
+  margin: 0 auto;
+  min-height: 4rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.site-header__monogram {
+  font-family: var(--font-display);
+  font-size: 1.85rem;
+  line-height: 1;
+  letter-spacing: var(--tracking-display);
+  text-decoration: none;
+}
+
+.site-header__nav {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.site-header__portfolio-group {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.site-header__sub-links {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+  overflow: hidden;
+  max-width: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: max-width 220ms cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 160ms ease-out,
+              margin-right 220ms cubic-bezier(0.16, 1, 0.3, 1);
+  margin-right: 0;
+}
+
+.site-header__sub-links.is-expanded {
+  max-width: 22rem;
+  opacity: 1;
+  pointer-events: auto;
+  margin-right: 0.75rem;
+}
+
+.site-header__mobile-subnav {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .site-header__sub-links {
+    display: none;
+  }
+
+  .site-header__inner {
+    flex-wrap: wrap;
+    padding-block: 0.5rem;
+    row-gap: 0.35rem;
+  }
+
+  .site-header__mobile-subnav {
+    display: flex;
+    flex-basis: 100%;
+    justify-content: flex-end;
+    gap: 0.65rem;
+    padding-bottom: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: var(--type-meta);
+    letter-spacing: var(--tracking-meta);
+    text-transform: uppercase;
+  }
+
+  .site-header__mobile-subnav button {
+    background: none;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+    color: var(--ink-mute);
+    font: inherit;
+    letter-spacing: inherit;
+    text-transform: inherit;
+  }
+
+  .site-header__mobile-subnav button:hover,
+  .site-header__mobile-subnav button:focus-visible {
+    color: var(--jade);
+  }
+
+  .site-header__mobile-subnav .site-header__sub-dot {
+    color: var(--ink-fade);
+  }
+}
+
+.site-header__sub-dot {
+  color: var(--ink-fade);
+  font-size: 0.875rem;
+}
+
+.site-header__nav-link {
+  position: relative;
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  font-weight: 450;
+  letter-spacing: 0;
+  text-decoration: none;
+  color: var(--ink-soft);
+  padding-block: 0.25rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.site-header__nav-link--sub {
+  font-size: 0.875rem;
+  color: var(--ink-mute);
+}
+
+.site-header__nav-link--sub:hover {
+  color: var(--jade);
+}
+
+.site-header__nav-link::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -0.35rem;
+  width: 100%;
+  height: 2px;
+  background-color: var(--jade);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 180ms ease;
+}
+
+.site-header__nav-link:hover,
+.site-header__nav-link:focus-visible,
+.site-header__nav-link.is-active {
+  color: var(--ink);
+}
+
+.site-header__nav-link.is-active::after,
+.site-header__nav-link:hover::after,
+.site-header__nav-link:focus-visible::after {
+  transform: scaleX(1);
+}
+
+.site-header__nav-link--sub::after {
+  display: none;
+}
+
+.site-footer {
+  width: min(1100px, 100% - 2.5rem);
+  margin: 0 auto;
+  border-top: 1px solid var(--rule);
+  padding: 3rem 0 3rem;
+}
+
+.site-footer__inner {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.site-footer__monogram {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  line-height: 1;
+}
+
+.site-footer__tagline {
+  margin: 0.5rem 0 0;
+  font-family: var(--font-display);
+  font-style: italic;
+  color: var(--ink-soft);
+}
+
+.site-footer__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+}
+
+.site-footer__links a {
+  font-family: var(--font-mono);
+  font-size: var(--type-meta);
+  letter-spacing: var(--tracking-meta);
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  text-decoration: none;
+}
+
+.site-footer__links a:hover,
+.site-footer__links a:focus-visible {
+  color: var(--jade);
+}
+
+.theme-toggle {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: var(--tracking-meta);
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  border: 1px solid var(--rule);
+  background: var(--paper-veil);
+  backdrop-filter: blur(10px);
+  padding: 0.375rem 0.75rem;
+  border-radius: 2px;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.theme-toggle [data-active='true'] {
+  color: var(--ink);
+}
+
+.theme-toggle:hover,
+.theme-toggle:focus-visible {
+  color: var(--jade);
+  border-color: var(--jade);
+}
+
+@media (max-width: 900px) {
+  .site-main,
+  .site-header__inner,
+  .site-footer {
+    width: min(100% - 2rem, 900px);
+  }
+}
+
+@media (max-width: 760px) {
+  /* Hide the desktop top-right corner toggle; render the toggle inline
+     inside the header at the left, before the JY monogram. */
+  .site-theme-toggle-corner {
+    display: none;
+  }
+  .site-header__mobile-toggle {
+    display: inline-flex;
+    margin-right: 0.5rem;
+  }
+  .site-header__mobile-toggle .theme-toggle {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.66rem;
+  }
+}

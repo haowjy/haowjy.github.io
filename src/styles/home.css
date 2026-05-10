@@ -1,0 +1,49 @@
+/* ========================================================================
+   Home — paper-pages manuscript
+   Only the bits that don't trivially express as Tailwind utilities live here:
+   - paper noise overlay (pseudo-element + mix-blend-mode)
+   - page-shadow CSS variable (theme-aware multi-shadow)
+   - scrollbar hiding (no Tailwind primitive)
+   ======================================================================== */
+
+:root {
+  --paper-noise: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.55 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  --page-shadow: 0 1px 0 rgba(20, 17, 15, 0.06),
+                 0 14px 28px -8px rgba(20, 17, 15, 0.22),
+                 0 48px 96px -28px rgba(20, 17, 15, 0.24);
+}
+
+[data-theme='dark'] {
+  --page-shadow: 0 1px 0 rgba(0, 0, 0, 0.5),
+                 0 14px 28px -8px rgba(0, 0, 0, 0.65),
+                 0 48px 96px -28px rgba(0, 0, 0, 0.55);
+}
+
+/* Paper-tooth noise overlay — pseudo + mix-blend-mode, can't be utility */
+.paper-noise {
+  position: relative;
+}
+
+.paper-noise::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--paper-noise);
+  background-size: 180px;
+  opacity: var(--grain-opacity);
+  pointer-events: none;
+  mix-blend-mode: multiply;
+}
+
+.paper-noise > * {
+  position: relative;
+}
+
+/* Hidden scrollbar utility for horizontal strips */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
