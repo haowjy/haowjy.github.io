@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import {
   motion,
   useMotionValueEvent,
@@ -8,7 +8,6 @@ import {
 import Page from './Page'
 import {
   driverHeightVh,
-  HERO_VH,
   pageIndexFromProgress,
   progressToPageProgress,
 } from './pageGeometry'
@@ -58,38 +57,6 @@ export default function PageStack({
     target: driverRef,
     offset: ['start start', 'end end'],
   })
-
-  // Window scroll for the hero-to-book slide-in. The bound book
-  // translates up from below the viewport into its natural sticky
-  // position over the first `HERO_VH` viewport-heights of scroll —
-  // the same range during which the HeroOverlay morphs the title.
-  // Tracking window scroll (rather than the driver's local progress)
-  // keeps the slide tied to a literal "you scrolled this many viewport
-  // heights from the top" metric regardless of how many manuscript
-  // pages exist.
-  const { scrollY: windowScrollY } = useScroll()
-  const [vhPx, setVhPx] = useState<number>(() =>
-    typeof window === 'undefined' ? 800 : window.innerHeight,
-  )
-  useEffect(() => {
-    const update = () => setVhPx(window.innerHeight)
-    update()
-    window.addEventListener('resize', update)
-    return () => window.removeEventListener('resize', update)
-  }, [])
-
-  // Hero range in pixels = HERO_VH viewport-heights from the top.
-  const heroRangePx = (HERO_VH / 100) * vhPx
-  // Stage translateY: starts one full viewport below its natural
-  // sticky position (`vhPx`), arrives at 0 when the user has scrolled
-  // through the hero prelude. Clamped so deep scrolls don't keep
-  // pulling the stage upward.
-  const slideY = useTransform(
-    windowScrollY,
-    [0, heroRangePx],
-    [vhPx, 0],
-    { clamp: true },
-  )
 
   // Continuous "current page index" derived from scroll progress.
   // Integer part = page whose cycle we're inside; fraction is the
@@ -142,7 +109,6 @@ export default function PageStack({
     >
       <motion.div
         className="manuscript-stage"
-        style={reducedMotion ? undefined : { y: slideY }}
       >
         {pages.map((p, i) => (
           <Page

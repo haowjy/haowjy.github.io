@@ -30,18 +30,8 @@ const FLIP_VH = 100
 /** Total scroll per page = dwell + flip. */
 const CYCLE_VH = DWELL_VH + FLIP_VH
 
-/**
- * Viewport-heights of "hero prelude" — scroll range BEFORE page 0 enters
- * its dwell. During this range, the manuscript pages stay frozen at the
- * cover dwell while a fixed `HeroOverlay` (rendered above the manuscript)
- * fades and shrinks out of view, revealing the bound book underneath.
- *
- * Set to 100 so the hero gets exactly one viewport of scroll — long
- * enough to feel deliberate without overstaying its welcome. Zero
- * disables the hero phase entirely (manuscript starts at scroll=0,
- * original behavior).
- */
-export const HERO_VH = 100
+/** Hero prelude removed; pages start at scrollY=0. */
+export const HERO_VH = 0
 
 /**
  * Fraction of each page's cycle that is dwell. Used by `Page.tsx` to
@@ -53,18 +43,14 @@ export const DWELL_FRAC = DWELL_VH / CYCLE_VH
 
 /**
  * Total driver height for a given page count, expressed in `vh`.
- * Used by `PageStack` to size its scroll driver. Includes the hero
- * prelude so the document scroll has room for the hero-to-book morph
- * before page 0 starts its dwell.
+ * Used by `PageStack` to size its scroll driver.
  */
 export function driverHeightVh(total: number): number {
   return total * CYCLE_VH + HERO_VH
 }
 
 /** Pixel offset of page i's dwell start. Internal — callers should
- *  use `scrollToPage` instead so the pixel math stays in one place.
- *  The +HERO_VH offset keeps page indices aligned with their natural
- *  rest position now that scroll 0..HERO_VH is reserved for the hero. */
+ *  use `scrollToPage` instead so the pixel math stays in one place. */
 function dwellStartPx(index: number, viewportHeightPx: number): number {
   return ((HERO_VH + index * CYCLE_VH) / 100) * viewportHeightPx
 }
@@ -93,13 +79,11 @@ export function pageIndexFromProgress(
  * Continuous "current page index" from motion's `scrollYProgress`.
  *
  * scrollYProgress runs 0..1 over the driver's scrollable range
- * `(driverHeight − vh) = (total × CYCLE_VH + HERO_VH − 100) vh`. The
- * first `HERO_VH` vh of that range is the hero-to-book morph — pages
- * stay frozen at the cover dwell. After that, one full page cycle
- * (CYCLE_VH vh) advances the integer page index by one.
+ * `(driverHeight − vh)`. One full page cycle (CYCLE_VH vh) advances
+ * the integer page index by one.
  *
- * Implementation: convert scrollYProgress back to a vh-scrolled value,
- * subtract the hero prelude, clamp at zero, and divide by CYCLE_VH.
+ * Implementation: convert scrollYProgress back to vh-scrolled distance
+ * and divide by CYCLE_VH.
  */
 export function progressToPageProgress(
   scrollYProgress: number,
@@ -107,8 +91,7 @@ export function progressToPageProgress(
 ): number {
   const scrollableVh = total * CYCLE_VH + HERO_VH - 100
   const scrolledVh = scrollYProgress * scrollableVh
-  const afterHeroVh = Math.max(0, scrolledVh - HERO_VH)
-  return afterHeroVh / CYCLE_VH
+  return scrolledVh / CYCLE_VH
 }
 
 /**

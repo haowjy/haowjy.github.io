@@ -9,17 +9,12 @@ export function AboutBody() {
   return (
     <>
       <p>
-        I&rsquo;m a software engineer focused on the infrastructure around
-        large language models: context management, tool orchestration,
-        evaluation, and provenance. I build the layer that makes agents
-        actually work.
+        I&rsquo;m a software engineer focused on applying AI and LLMs 
+        to the real world.
       </p>
       <p>
-        Right now I&rsquo;m at Epic Systems on the Referrals and
-        Authorizations team, building production LLM summary workflows for
-        clinical chart review across 100+ hospitals. Before that:
-        stroke-screening apps, health-data backends, and UX analysis
-        pipelines.
+        Right now I&rsquo;m at Epic Systems building production 
+        LLM summary workflows for clinical chart review across 100+ hospitals.
       </p>
       <p>
         In my free time, I&rsquo;m building meridian-cli, an open-source
@@ -27,7 +22,7 @@ export function AboutBody() {
         specialized agents, models, and harnesses.
       </p>
       <p>
-        Outside the keyboard: tennis, the great outdoors when I can get
+        Away from the keyboard: tennis, the great outdoors when I can get
         out into it, and the firm position that Roronoa Zoro is the GOAT.
       </p>
     </>

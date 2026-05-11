@@ -40,7 +40,14 @@ export default function AboutPage() {
         ))}
       </nav>
 
-      <div className="prose-about max-w-[58ch] text-ink-soft text-[clamp(0.9rem,0.5vw+0.8rem,1.0625rem)] leading-body space-y-4">
+      {/* Body sizing (font-size, line-height, paragraph gap) lives on
+          `.prose-about` in manuscript.css. It used to be Tailwind
+          utilities here, but the bio needs to step down on short
+          viewports (e.g. 1366×768) where `--manuscript-page-w` is
+          height-capped and lines wrap more — a media-query override
+          on the semantic class is cleaner than fighting Tailwind
+          specificity. */}
+      <div className="prose-about max-w-[58ch] text-ink-soft">
         <AboutBody />
       </div>
     </div>

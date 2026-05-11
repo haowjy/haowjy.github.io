@@ -15,8 +15,17 @@
   /* Page geometry. `rem`/`vw` are font-independent so the variable
      resolves to the same width whether used in `.manuscript-page` (body
      font) or `.contents-spine` (mono, smaller) — important for the
-     spine's offset calculation. */
-  --manuscript-page-w: min(46rem, 92vw);
+     spine's offset calculation.
+
+     The third `min()` term — `calc(var(--manuscript-page-h) * 0.8)` —
+     keeps the page portrait (paper-like) regardless of viewport
+     dimensions. Without it, wide-but-short viewports (laptops at
+     ~1366×768) produce a square page: 42rem (672px) ≥ 85vh (~653px).
+     Pinning width to ≤ 0.8 × height enforces a ~1:1.25 ratio (close to
+     US Letter's 1:1.29). On a 1080-tall desktop the term resolves to
+     734px which barely undercuts the 46rem (736px) term — desktop
+     proportions are effectively unchanged. */
+  --manuscript-page-w: min(46rem, 92vw, calc(var(--manuscript-page-h) * 0.8));
   --manuscript-page-h: 85vh;
   --manuscript-page-pad-x: clamp(1.5rem, 4vw, 3.5rem);
   --manuscript-page-pad-y: clamp(2rem, 5vh, 4rem);
@@ -41,6 +50,19 @@
     rgba(0, 0, 0, 0.35) 35%,
     transparent 70%
   );
+}
+
+/* Laptop-class viewports get a narrower page so the desk surface and
+   contents spine have breathing room. Wide desktops keep the original
+   46rem width. The same height-based portrait cap as the base rule is
+   carried through so a short-but-wide viewport (e.g. 1366×768) still
+   resolves to a page that is taller than it is wide — without the cap
+   the 42rem (672px) term would exceed 85vh (~653px) on that viewport
+   and produce a square page. */
+@media (min-width: 761px) and (max-width: 1536px) {
+  :root {
+    --manuscript-page-w: min(42rem, 88vw, calc(var(--manuscript-page-h) * 0.8));
+  }
 }
 
 /* ---------------------------------------------------------------------------
@@ -417,65 +439,28 @@
 }
 
 /* ---------------------------------------------------------------------------
-   Hero-to-book entry. Two `position: fixed` pieces:
-
-     1. .hero-overlay__morph — single morphing title anchored at the
-        measured cover-title bounding rect (set inline from JS).
-        Animates scale + translate from "viewport-centered, large" to
-        "natural cover position, natural size". When the morph lands,
-        it fades out and the real cover h1 (sliding up into place
-        inside the book) takes over at the same pixel coords —
-        invisible hand-off.
-
-     2. .hero-overlay__hint — the "↓ scroll" affordance.
-
-   No curtain: `body` background is already `var(--paper)` and the book
-   stage slides in from below the viewport (PageStack), so at scrollY=0
-   there's nothing to hide.
-
-   Typography on the morph mirrors the cover h1 (.font-display,
-   weight 400, tracking-display) so when scale lands at the target
-   ratio, the morph element is pixel-identical to the cover h1
-   underneath.
+   About page prose. Sizing moved here from Tailwind utilities so a
+   media-query can step the text down on short viewports where the
+   height-capped page width causes more line wrapping.
    --------------------------------------------------------------------------- */
-.hero-overlay__morph {
-  /* JS sets left/top/fontSize inline to the measured cover-title
-     geometry. font-size stays fixed at the HERO size; transform: scale
-     shrinks the bitmap down to the cover size — downscaling is crisp,
-     unlike upscaling, so this avoids the fuzziness that font-size:
-     scale() up would cause. Transform-origin top-left so the scale +
-     translate math in HeroOverlay.tsx composes predictably. */
-  position: fixed;
-  z-index: 16;
-  margin: 0;
-  font-family: var(--font-display);
-  font-weight: 400;
-  letter-spacing: var(--tracking-display);
-  color: var(--ink);
-  text-align: left;
-  transform-origin: 0 0;
-  pointer-events: none;
-  will-change: transform, opacity;
+.prose-about {
+  font-size: clamp(0.9rem, 0.5vw + 0.8rem, 1.0625rem);
+  line-height: var(--leading-body, 1.7);
 }
 
-.hero-overlay__hint {
-  position: fixed;
-  z-index: 16;
-  bottom: 2.5rem;
-  left: 0;
-  right: 0;
-  text-align: center;
-  font-family: var(--font-mono);
-  font-size: var(--type-meta);
-  letter-spacing: var(--tracking-meta);
-  text-transform: uppercase;
-  color: var(--ink-fade);
-  pointer-events: none;
+.prose-about > * + * {
+  margin-top: 1rem; /* matches space-y-4 */
 }
 
-@media (max-width: 760px) {
-  .hero-overlay__hint {
-    bottom: 1.5rem;
+/* On short viewports (laptops), tighten font size and paragraph gaps
+   so the four About paragraphs still fit within one manuscript page. */
+@media (max-height: 820px) {
+  .prose-about {
+    font-size: clamp(0.82rem, 0.4vw + 0.72rem, 0.95rem);
+    line-height: 1.6;
+  }
+  .prose-about > * + * {
+    margin-top: 0.75rem; /* tighter than space-y-4 */
   }
 }
 
@@ -483,4 +468,3 @@
    component layer (hard switch at the threshold). The 3D structure
    remains so the stack-behind effect — which is static layout, not
    motion — still works. */
-

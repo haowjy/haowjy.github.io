@@ -2,7 +2,6 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useLocation } from 'react-router'
 import { MANUSCRIPT_GOTO_EVENT } from '@/components/layout/Header'
 import ContentsSpine from '@/components/manuscript/ContentsSpine'
-import HeroOverlay from '@/components/manuscript/HeroOverlay'
 import { scrollToPage } from '@/components/manuscript/pageGeometry'
 import PageStack from '@/components/manuscript/PageStack'
 import type { ManuscriptPage } from '@/components/manuscript/types'
@@ -334,14 +333,6 @@ export default function HomeRoute() {
           <ResumeListBlock key={`${b.kind}-${i}`} block={b} />
         ))}
       </div>
-
-      {/* Hero overlay — the entry "title" moment. Renders independently
-          of pagination so the very first frame already shows the name,
-          even before the projects/resume probes have finished measuring.
-          Fades and shrinks out over the first viewport-height of scroll
-          (the `HERO_VH` prelude in pageGeometry.ts), revealing the
-          manuscript underneath as the user scrolls into the book. */}
-      <HeroOverlay />
 
       {/* Until measurement settles, render nothing rather than a flash of
           unpaginated content. Front matter (Cover + About) doesn't need

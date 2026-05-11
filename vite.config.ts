@@ -23,6 +23,9 @@ const mdxRawLoader = {
 }
 
 export default defineConfig({
+  server: {
+    allowedHosts: ['pop-os.tail852a76.ts.net'],
+  },
   plugins: [
     mdx({
       remarkPlugins: [
