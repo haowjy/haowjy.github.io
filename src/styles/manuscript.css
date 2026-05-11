@@ -1,0 +1,486 @@
+/* ============================================================================
+   Manuscript — paper-pages that turn at the corner.
+
+   What lives here:
+   - Page surface (paper colour, multi-layer shadow, deckle border)
+   - Curl pseudo-elements (corner gradient that grows with flip progress)
+   - Contents spine styles (CSS-only hover affordances)
+
+   What doesn't:
+   - Per-page layouts (live in JSX with Tailwind utilities)
+   - Motion values driving curl progress (live in Page.tsx)
+   ============================================================================ */
+
+:root {
+  /* Page geometry. `rem`/`vw` are font-independent so the variable
+     resolves to the same width whether used in `.manuscript-page` (body
+     font) or `.contents-spine` (mono, smaller) — important for the
+     spine's offset calculation. */
+  --manuscript-page-w: min(46rem, 92vw);
+  --manuscript-page-h: 85vh;
+  --manuscript-page-pad-x: clamp(1.5rem, 4vw, 3.5rem);
+  --manuscript-page-pad-y: clamp(2rem, 5vh, 4rem);
+
+  /* Stack-behind peek offsets per depth unit */
+  --manuscript-peek-x: 10px;
+  --manuscript-peek-y: -6px;
+
+  /* Corner-curl shadow tones (light theme) */
+  --manuscript-curl-underside: linear-gradient(
+    135deg,
+    rgba(20, 17, 15, 0.18) 0%,
+    rgba(20, 17, 15, 0.08) 35%,
+    transparent 70%
+  );
+}
+
+[data-theme='dark'] {
+  --manuscript-curl-underside: linear-gradient(
+    135deg,
+    rgba(0, 0, 0, 0.55) 0%,
+    rgba(0, 0, 0, 0.35) 35%,
+    transparent 70%
+  );
+}
+
+/* ---------------------------------------------------------------------------
+   Outer scroll driver. Its tall height converts vertical scroll into flip
+   progress; the inner stack stays glued to the viewport via `position: sticky`.
+   --------------------------------------------------------------------------- */
+.manuscript-driver {
+  position: relative;
+  width: 100%;
+}
+
+/* Scroll-snap is JS-driven (see PageStack.tsx). CSS scroll-snap is
+   intentionally NOT used: `mandatory` fights the user's input, and
+   `proximity`'s threshold is browser-dependent — leaving the page
+   stuck mid-flip when the threshold doesn't catch the gesture. The
+   JS version triggers reliably after scroll ends and animates to the
+   nearest page boundary only when actually mid-flip. */
+
+.manuscript-stage {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Perspective for the corner curl rotateY */
+  perspective: 1800px;
+}
+
+/* Mobile: the top header (rendered for the manuscript on mobile only,
+   see Header.tsx + global.css) carries the section navigation that used
+   to live in the bottom contents-spine. The spine is hidden on mobile
+   (see below) so we no longer reserve bottom padding for it; instead
+   we reserve top padding so the rotating paper doesn't slide under the
+   fixed header. The "extra space for the paper" the user asked for
+   falls out of dropping the bottom bar entirely — the paper now has
+   the full viewport minus the header to breathe in. */
+@media (max-width: 760px) {
+  .manuscript-stage {
+    padding-top: 5.5rem;
+    padding-bottom: 1rem;
+    align-items: center;
+  }
+  /* Cap the page height so it never tries to be taller than (viewport −
+     header − bottom buffer). On phones with the address bar showing,
+     85vh would push the paper under the header; the `min()` keeps it
+     comfortable on the smallest devices while still claiming the full
+     85vh on roomier ones. */
+  :root {
+    --manuscript-page-h: min(85vh, calc(100vh - 8rem));
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   The page surface. One per manuscript entry. `z-index` is set inline as a
+   motion value (Page.tsx) — it swaps at the half-turn point so flipped
+   pages drop UNDER the right pile.
+
+   Each `.manuscript-page` is a 3D container with two children: a front
+   face (with the page's text) and a back face (blank paper, pre-rotated
+   180°). The container rotates around its left edge (the spine);
+   `preserve-3d` means the faces rotate together, and
+   `backface-visibility: hidden` on each face means only one is ever
+   visible — exactly like a real sheet of paper.
+   --------------------------------------------------------------------------- */
+.manuscript-page {
+  position: absolute;
+  width: var(--manuscript-page-w);
+  height: var(--manuscript-page-h);
+  /* Hinge on the LEFT edge — the manuscript's spine. The right edge is
+     the free edge that arcs forward and around to the left. */
+  transform-origin: 0% 50%;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+/* Shared styling for both faces of a page. Per-face overrides below
+   strip the border/border-radius at the spine edge — a real bound book
+   has no rule line and no rounded corner where the sheet meets the
+   binding. The free edge keeps the rounded corner. */
+.manuscript-page__face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  padding: var(--manuscript-page-pad-y) var(--manuscript-page-pad-x);
+  background-color: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  box-shadow: var(--page-shadow);
+  /* Each face is one-sided. The container's `preserve-3d` + per-face
+     `backface-visibility: hidden` swaps which face is visible as the
+     page passes 90°. */
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  /* Don't let internal scrolling fight the page-flip wheel hijack */
+  overflow: hidden;
+}
+
+/* Paper-tooth noise overlay on the face. */
+.manuscript-page__face::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--paper-noise);
+  background-size: 180px;
+  opacity: var(--grain-opacity);
+  pointer-events: none;
+  mix-blend-mode: multiply;
+  border-radius: inherit;
+}
+
+/* Front face — content side. Spine sits at the LEFT edge of the page,
+   so we strip the rule line + rounded corner there. A bound book has
+   no edge artifact at the binding. */
+.manuscript-page__front {
+  border-left: 0;
+  border-radius: 0 2px 2px 0;
+}
+
+/* Back face — pre-rotated so it sits behind the front face in 3D space.
+   When the page rotates past 90°, this face turns toward the viewer
+   and the front face's `backface-visibility: hidden` takes the content
+   out of view. The result: rotating sheet shows content on its right
+   side of the rotation, blank paper on its left.
+
+   After this 180° self-rotation, the back face's LOCAL right edge sits
+   at the spine once the parent rotates, so the spine-side border/
+   radius mirror the front face. */
+.manuscript-page__back {
+  transform: rotateY(180deg);
+  border-right: 0;
+  border-radius: 2px 0 0 2px;
+}
+
+.manuscript-page__body {
+  flex: 1;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.manuscript-page__footer {
+  margin-top: auto;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--rule);
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: var(--tracking-meta);
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  flex-shrink: 0;
+}
+
+.manuscript-page__folio {
+  font-variant-numeric: tabular-nums;
+}
+
+.manuscript-page__section-label {
+  letter-spacing: var(--tracking-meta);
+}
+
+/* Probe used by usePagination to measure typography off-screen. */
+.manuscript-probe {
+  position: absolute;
+  visibility: hidden;
+  pointer-events: none;
+  top: 0;
+  left: 0;
+  width: calc(var(--manuscript-page-w) - 2 * var(--manuscript-page-pad-x));
+}
+
+/* ---------------------------------------------------------------------------
+   Contents spine. Right-side persistent nav on desktop; bottom bar on mobile.
+   Anchored just outside the page's right edge so it reads as part of the
+   manuscript, not floating in the void at the viewport edge.
+   --------------------------------------------------------------------------- */
+.contents-spine {
+  position: fixed;
+  top: 50%;
+  /* Anchor the spine adjacent to the page's RIGHT edge with enough gap
+     to clear the page's drop-shadow falloff (~0 48px 96px -28px extends
+     ~50–60px past the edge). Page rotates around its LEFT edge and
+     sweeps leftward as it turns, so the nav sits on the RIGHT — out of
+     the page's path of motion. Page is centered, so right-of-page =
+     50% + page-w/2, which means the spine's LEFT edge is at
+     50% + page-w/2 + gap. Cap so it doesn't fall off the viewport on
+     narrow desktops. */
+  left: min(calc(100vw - 9rem), calc(50% + var(--manuscript-page-w) / 2 + 5rem));
+  right: auto;
+  transform: translateY(-50%);
+  z-index: 40;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: var(--tracking-meta);
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  padding: 1rem 0;
+}
+
+.contents-spine__entry {
+  display: grid;
+  grid-template-columns: 1.5rem 1fr;
+  align-items: baseline;
+  gap: 0.5rem;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  text-align: left;
+  text-decoration: none;
+  transition: color 200ms ease;
+}
+
+.contents-spine__entry:hover,
+.contents-spine__entry:focus-visible {
+  color: var(--ink);
+  outline: none;
+}
+
+.contents-spine__entry .contents-spine__folio {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-fade);
+  transition: color 200ms ease;
+}
+
+.contents-spine__entry[data-current='true'] {
+  color: var(--ink);
+}
+
+.contents-spine__entry[data-current='true'] .contents-spine__folio {
+  color: var(--jade);
+}
+
+.contents-spine__entry .contents-spine__label {
+  position: relative;
+  padding-bottom: 1px;
+}
+
+.contents-spine__entry[data-current='true'] .contents-spine__label::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -2px;
+  height: 1px;
+  background: var(--jade);
+}
+
+.contents-spine__divider {
+  height: 1px;
+  background: var(--rule);
+  margin: 0.5rem 0 0.25rem;
+}
+
+/* Resume PDF as a small distinct button, not another nav row. Outlined,
+   jade, with a download glyph instead of an external-link arrow — reads
+   as "download this," not "navigate to another page." */
+.contents-spine__pdf-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.7rem;
+  margin-top: 0.1rem;
+  color: var(--jade);
+  background: color-mix(in srgb, var(--jade) 7%, transparent);
+  border: 1px solid color-mix(in srgb, var(--jade) 35%, transparent);
+  border-radius: 3px;
+  text-decoration: none;
+  letter-spacing: var(--tracking-meta);
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  transition: background 200ms ease, color 200ms ease, border-color 200ms ease;
+  width: max-content;
+}
+
+.contents-spine__pdf-button:hover,
+.contents-spine__pdf-button:focus-visible {
+  color: var(--paper);
+  background: var(--jade-deep);
+  border-color: var(--jade-deep);
+  outline: none;
+}
+
+.contents-spine__pdf-icon {
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
+.contents-spine__theme {
+  margin-top: 0.75rem;
+}
+
+/* Mobile bottom-bar variant */
+@media (max-width: 760px) {
+  /* The bottom contents-spine is gone on mobile — five section entries
+     plus folios, PDF link, and theme toggle never fit one row without
+     becoming a tiny horizontally-scrolling slab. Section navigation now
+     lives in the top header's mobile subnav; theme toggle is in the
+     header's mobile slot; the resume PDF is reachable from the Resume
+     page itself. Keep the styles below for desktop-bar shape parity in
+     case we revive it. */
+  .contents-spine {
+    display: none;
+  }
+  .contents-spine.contents-spine--desktop-only-fallback {
+    /* Reset desktop's left-edge anchor for the bottom bar */
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    transform: none;
+    flex-direction: row;
+    align-items: center;
+    overflow-x: auto;
+    background: color-mix(in srgb, var(--paper) 88%, transparent);
+    backdrop-filter: blur(8px);
+    border-top: 1px solid var(--rule);
+    padding: 0.6rem 1rem;
+    gap: 1rem;
+    scrollbar-width: none;
+  }
+
+  .contents-spine::-webkit-scrollbar {
+    display: none;
+  }
+
+  .contents-spine__entry {
+    grid-template-columns: auto auto;
+    flex-shrink: 0;
+    /* Anchor the entry-spanning underline below. */
+    position: relative;
+  }
+
+  /* On mobile the folio sits adjacent to the label rather than in its
+     own desktop grid column, so the label-only underline reads as
+     "IV  RESUME" with only RESUME underlined. Span the underline across
+     the whole entry instead so it covers both the Roman folio and the
+     label as one unit. */
+  .contents-spine__entry[data-current='true'] .contents-spine__label::after {
+    display: none;
+  }
+  .contents-spine__entry[data-current='true']::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -2px;
+    height: 1px;
+    background: var(--jade);
+  }
+
+  .contents-spine__divider {
+    width: 1px;
+    height: 1rem;
+    margin: 0 0.25rem;
+  }
+
+  .contents-spine__theme {
+    margin-top: 0;
+    margin-left: auto;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Hero-to-book entry. Two `position: fixed` pieces:
+
+     1. .hero-overlay__morph — single morphing title anchored at the
+        measured cover-title bounding rect (set inline from JS).
+        Animates scale + translate from "viewport-centered, large" to
+        "natural cover position, natural size". When the morph lands,
+        it fades out and the real cover h1 (sliding up into place
+        inside the book) takes over at the same pixel coords —
+        invisible hand-off.
+
+     2. .hero-overlay__hint — the "↓ scroll" affordance.
+
+   No curtain: `body` background is already `var(--paper)` and the book
+   stage slides in from below the viewport (PageStack), so at scrollY=0
+   there's nothing to hide.
+
+   Typography on the morph mirrors the cover h1 (.font-display,
+   weight 400, tracking-display) so when scale lands at the target
+   ratio, the morph element is pixel-identical to the cover h1
+   underneath.
+   --------------------------------------------------------------------------- */
+.hero-overlay__morph {
+  /* JS sets left/top/fontSize inline to the measured cover-title
+     geometry. font-size stays fixed at the HERO size; transform: scale
+     shrinks the bitmap down to the cover size — downscaling is crisp,
+     unlike upscaling, so this avoids the fuzziness that font-size:
+     scale() up would cause. Transform-origin top-left so the scale +
+     translate math in HeroOverlay.tsx composes predictably. */
+  position: fixed;
+  z-index: 16;
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: var(--tracking-display);
+  color: var(--ink);
+  text-align: left;
+  transform-origin: 0 0;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+.hero-overlay__hint {
+  position: fixed;
+  z-index: 16;
+  bottom: 2.5rem;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: var(--type-meta);
+  letter-spacing: var(--tracking-meta);
+  text-transform: uppercase;
+  color: var(--ink-fade);
+  pointer-events: none;
+}
+
+@media (max-width: 760px) {
+  .hero-overlay__hint {
+    bottom: 1.5rem;
+  }
+}
+
+/* Reduced motion: the per-page turn rotation is suppressed at the
+   component layer (hard switch at the threshold). The 3D structure
+   remains so the stack-behind effect — which is static layout, not
+   motion — still works. */
+

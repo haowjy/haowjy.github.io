@@ -1,5 +1,4 @@
 @import 'tailwindcss';
-@import 'lenis/dist/lenis.css';
 
 @import '@fontsource/dm-serif-display/400.css';
 @import '@fontsource-variable/jetbrains-mono';
@@ -38,6 +37,7 @@
   --rule: #14110f22;
   --rule-strong: #14110f44;
   --grain-opacity: 0.04;
+  --paper-noise: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.55 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
   --shadow-soft: 0 1px 2px #14110f0f, 0 8px 24px #14110f0a;
 
   --type-display-xxl: clamp(5rem, 12vw + 1rem, 14rem);
@@ -163,9 +163,6 @@ body,
   min-height: 100%;
 }
 
-/* Lenis owns smooth scroll — native scroll-behavior would fight it.
-   Hash-link jumps are handled by Lenis automatically when ReactLenis is mounted at root. */
-
 body {
   margin: 0;
   background-color: var(--paper);
@@ -192,6 +189,18 @@ a {
   padding-block: 4.5rem 4.5rem;
 }
 
+/* Manuscript main has no centered column or padding — the PageStack
+   handles its own layout end-to-end. */
+.site-main-manuscript {
+  flex: 1;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  /* Motion's `useScroll` requires a non-static ancestor to compute
+     offsets correctly; the manuscript driver lives inside this main. */
+  position: relative;
+}
+
 .site-theme-toggle-corner {
   position: fixed;
   top: 1rem;
@@ -210,6 +219,23 @@ a {
   right: 0;
   z-index: 20;
   transition: background-color 200ms ease, backdrop-filter 200ms ease;
+}
+
+/* Desktop: keep the manuscript chromeless — the contents-spine on the
+   right edge is the navigation (including its own theme toggle), and
+   the typography carries the brand. Mobile (handled below) shows the
+   same header as blog so the two routes feel like one continuous
+   experience. */
+@media (min-width: 761px) {
+  .site-header--manuscript {
+    display: none;
+  }
+  /* The corner theme toggle is rendered as a Header sibling — hide it
+     too on desktop manuscript so the spine's toggle is the single
+     point of control. */
+  .site-theme-toggle-corner--manuscript {
+    display: none;
+  }
 }
 
 .site-header.is-scrolled {
@@ -279,18 +305,45 @@ a {
     display: none;
   }
 
+  /* The mobile header is shared between blog (no subnav) and
+     portfolio (with subnav). Keep the TOP row identical between the
+     two — same min-height, same padding — so JY / Portfolio · Blog
+     sit in the same vertical band on both routes. Only the subnav
+     row, when present, adds extra height (and it's tight on purpose
+     to minimise the gap with the blog-mode header). */
   .site-header__inner {
     flex-wrap: wrap;
-    padding-block: 0.5rem;
-    row-gap: 0.35rem;
+    padding-block: 0.35rem;
+    row-gap: 0.15rem;
+    min-height: 3.25rem;
+  }
+
+  /* Each first-row item reserves the full inner-row height so that
+     when the subnav wraps below them, the first flex line stays at
+     the same height as the single-row /blog header. Without this,
+     `align-items: center` + `flex-wrap` only centers items within
+     their own (shorter) flex line, so the subnav row visually
+     "pushes up" the Portfolio/Blog row by a few pixels. */
+  .site-header__inner > .site-header__mobile-toggle,
+  .site-header__inner > .site-header__monogram,
+  .site-header__inner > .site-header__nav {
+    min-height: calc(3.25rem - 0.7rem);
+    display: flex;
+    align-items: center;
   }
 
   .site-header__mobile-subnav {
     display: flex;
+    flex-wrap: wrap;
     flex-basis: 100%;
     justify-content: flex-end;
-    gap: 0.65rem;
-    padding-bottom: 0.5rem;
+    align-items: center;
+    column-gap: 0.55rem;
+    row-gap: 0.25rem;
+    /* Reduced from 0.5rem so the subnav doesn't add much vertical
+       weight beyond the top row. The dot separators are short and the
+       mono text reads fine with this tighter footer band. */
+    padding-bottom: 0.25rem;
     font-family: var(--font-mono);
     font-size: var(--type-meta);
     letter-spacing: var(--tracking-meta);
@@ -306,6 +359,7 @@ a {
     font: inherit;
     letter-spacing: inherit;
     text-transform: inherit;
+    white-space: nowrap;
   }
 
   .site-header__mobile-subnav button:hover,
@@ -315,6 +369,21 @@ a {
 
   .site-header__mobile-subnav .site-header__sub-dot {
     color: var(--ink-fade);
+  }
+}
+
+/* Very narrow phones (≤ 380px): the row still won't always fit four mono
+   uppercase labels with separators on one line. Drop the dot separators
+   so labels wrap cleanly into 2 rows, tighten letter-spacing, and shrink
+   the type one notch so the row stays readable rather than crammed. */
+@media (max-width: 380px) {
+  .site-header__mobile-subnav {
+    column-gap: 0.7rem;
+    font-size: var(--type-micro);
+    letter-spacing: 0.08em;
+  }
+  .site-header__mobile-subnav .site-header__sub-dot {
+    display: none;
   }
 }
 
@@ -347,10 +416,15 @@ a {
 }
 
 .site-header__nav-link::after {
+  /* Sits just below the link's content box. The link already has
+     `padding-block: 0.25rem` which puts ~4px of breathing room between
+     the text baseline and this rule — adding another negative offset on
+     top of that produced an obvious gap that read as a disconnected
+     marker rather than an underline. */
   content: '';
   position: absolute;
   left: 0;
-  bottom: -0.35rem;
+  bottom: 0;
   width: 100%;
   height: 2px;
   background-color: var(--jade);
@@ -462,6 +536,19 @@ a {
      inside the header at the left, before the JY monogram. */
   .site-theme-toggle-corner {
     display: none;
+  }
+
+  /* On mobile the two tabs sit in a tight row; matching the underline
+     exactly to text width makes "Portfolio" (~59 px) read as a much
+     heavier indicator than "Blog" (~31 px). A small horizontal padding
+     gives each tab a consistent breathing room past the text, so the
+     active indicator reads as a tab marker rather than a text underline
+     that varies dramatically with word length. */
+  .site-header__nav-link {
+    padding-inline: 0.5rem;
+  }
+  .site-header__nav {
+    gap: 0.25rem;
   }
   .site-header__mobile-toggle {
     display: inline-flex;

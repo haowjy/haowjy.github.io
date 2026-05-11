@@ -1,19 +1,16 @@
 import { useEffect } from 'react'
 import { useLocation } from 'react-router'
-import { useLenis } from 'lenis/react'
 
 /**
- * Watches `location.hash` and smooth-scrolls to the matching element via Lenis.
+ * Watches `location.hash` and scrolls to the matching element.
  *
- * Needed because:
- * - React Router 7 (data router) doesn't auto-scroll to hash anchors
- * - Lenis hijacks wheel scroll, so native browser hash jumping doesn't apply
- * - Cross-route hash navigation (e.g. /blog → /#about) needs to wait for the
- *   target to mount before scrolling
+ * Needed because React Router 7 (data router) doesn't auto-scroll to hash
+ * anchors. Cross-route hash navigation (e.g. `/blog → /#about`) also needs
+ * to wait for the target to mount before scrolling, which the two rAFs
+ * below handle.
  */
 export default function HashScroll() {
   const { hash, pathname } = useLocation()
-  const lenis = useLenis()
 
   useEffect(() => {
     if (!hash) return
@@ -26,11 +23,7 @@ export default function HashScroll() {
       raf2 = requestAnimationFrame(() => {
         const el = document.getElementById(id)
         if (!el) return
-        if (lenis) {
-          lenis.scrollTo(el, { offset: -80 })
-        } else {
-          el.scrollIntoView({ behavior: 'smooth' })
-        }
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' })
       })
     })
 
@@ -38,7 +31,7 @@ export default function HashScroll() {
       cancelAnimationFrame(raf1)
       cancelAnimationFrame(raf2)
     }
-  }, [hash, pathname, lenis])
+  }, [hash, pathname])
 
   return null
 }

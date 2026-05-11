@@ -1,56 +1,91 @@
 # Design notes
 
-Working notes for haowjy.github.io. Captures the design direction that emerged
-through iteration, the principles that drove cuts, and the technical choices
-that hold the visual system together. Living doc — update as decisions land.
+## Purpose
+
+Capability demo first, personal site second. A visitor should leave with
+two impressions: that this person can build polished, distinctive
+interfaces, and that this person did real work worth knowing about.
+Generic content with ambitious mechanics is a tech demo. Ambitious
+content with no mechanics is a resume. Both at once is the point.
 
 ## Direction
 
-**Paper-pages manuscript.** The page reads like a stack of typeset pages
-floating against a paper-toned canvas. Cards have paper-tooth noise, a real
-multi-layer drop shadow, and a thin rule border. Each card carries a page
-number in its footer.
+**Paper-pages manuscript that turns.** Discrete pages, page-number
+footers, paper-toned canvas, multi-layer drop shadow, paper-tooth noise.
+Scrolling fans through the manuscript: pages curl and turn at the corner
+as scroll progresses, revealing the page beneath. Pages 2-3-4 stack
+visibly behind the current page so the manuscript reads as finite from
+the first frame.
 
-The aesthetic stays committed without being affected — typography and rhythm
-do the work, not chrome. Cuts have been more important than additions.
+Typography, rhythm, and the page mechanics do the work. No chrome on top.
+
+### Page mechanics
+
+- **Page size.** ~85vh. Stacked pages behind remain visible at the
+  edges. Scales on mobile, keeps the same mechanic.
+- **Scroll-driven flip.** Continuous corner curl tracks scroll progress.
+  The current page lifts at the corner and casts shadow on the page
+  beneath. Not snap-to-flip.
+- **Dynamic pagination.** List sections (projects, resume) overflow
+  into additional pages when content doesn't fit one page. The
+  manuscript grows page by page as content is added. Resizing
+  re-paginates live.
+- **Writing on home does not paginate.** Stays a curated cut (3-5 recent
+  posts) on a single page. `See all writing →` routes to `/blog`. The
+  archive lives at `/blog`; the homepage is the highlight reel.
+- **Contents spine.** Persistent nav at the right edge (desktop) or
+  bottom bar (mobile): page numbers, section labels, current page
+  highlighted. Click an entry → fast-flip through intervening pages
+  in ~300ms total, lands on target. PDF resume link included.
+- **Reduced-motion.** Snap-to-page, no progressive curl. Stack-behind
+  effect preserved. Honors `prefers-reduced-motion: reduce`.
 
 ### Type system
 
-| Role | Family | Use |
-|---|---|---|
-| Display | DM Serif Display | Section titles, post headlines |
-| Body | IBM Plex Sans | All running prose |
-| Mono | JetBrains Mono | Eyebrow meta, dates, page numbers, links rail |
+Roles, not specific families. Generic system stacks (Inter, Roboto,
+Arial) are out.
 
-Fraunces is loaded but unused — keep available for experiments.
+| Role | Use | Current |
+|---|---|---|
+| Display | Section titles, post headlines | DM Serif Display |
+| Body | All running prose | IBM Plex Sans |
+| Mono | Eyebrow meta, dates, page numbers, link rails | JetBrains Mono |
+
+Fraunces is loaded but unused — available for experiments.
 
 ### Color tokens
 
-CSS custom properties, defined in `src/styles/global.css`:
+Semantic names are stable; specific values are open to revision. Defined
+in `src/styles/global.css`:
 
-- `--paper`, `--paper-edge` — page surface, slightly differentiated for cards
+- `--paper`, `--paper-edge` — page surface, slightly differentiated for
+  cards
 - `--ink`, `--ink-soft`, `--ink-mute` — three text levels
-- `--jade`, `--jade-deep`, `--jade-veil` — accent green; deep for hover, veil
-  for hover-tinted backgrounds
-- `--amber`, `--gold` — used sparingly; gold (`#eac54f`) reserved for the
+- `--jade`, `--jade-deep`, `--jade-veil` — accent green; deep for hover,
+  veil for hover-tinted backgrounds
+- `--amber`, `--gold` — sparing; `--gold` (`#eac54f`) reserved for the
   GitHub star icon to match GH's own
 - `--rule`, `--rule-strong` — borders and underlines
 
-Both light and dark themes derive from the same token names; the dark theme
-overrides the values, components don't fork.
+Light and dark themes share token names; dark overrides values.
+Components do not fork.
 
 ### Page shadow
 
-`--page-shadow` is a three-layer drop shadow tuned for visible "lift off the
-page" without becoming a sticker. Light and dark have separate values — dark
+`--page-shadow` is a three-layer drop shadow tuned for "lift off the
+page" without sticker-edge. Light and dark have separate values; dark
 needs deeper alphas to register on a near-black background.
 
-## Cuts and the principle behind them
+## Cuts
 
-> **Don't fake metadata.** If a value isn't real, isn't useful, or only exists
-> to fill space, it doesn't ship.
+> **Don't fake metadata.** If a value isn't real, isn't useful, or only
+> exists to fill space, it doesn't ship.
 
-Things that were tried and removed:
+The principle applies to affected flourish: costume glyphs, fake
+metadata, lifecycle theater, manifesto-as-decoration. It does not apply
+to mechanics that complete the medium (the page-turn itself).
+
+Tried and removed:
 
 | Removed | Reason |
 |---|---|
@@ -69,59 +104,14 @@ Things that were tried and removed:
 
 ## Content principles
 
-- **Real data only.** GitHub stars are fetched live (1h localStorage cache,
-  hardcoded fallbacks for offline / failure). The resume in the PDF is the
-  source of truth — the homepage doesn't claim degrees, minors, or roles the
-  PDF doesn't. If they disagree, the PDF wins or the homepage gets edited
-- **No invented numbers.** Reading time is computed from word count at build
-  time, not hand-set. If a stat appears in prose, the underlying data lives in
-  `personal/datadump/<post-slug>/`
-- **Author voice over AI-styled summary.** Resume role descriptions and post
-  prose are written by the author. Empty placeholders are better than
-  competent-sounding filler
+- **Real data only.** GitHub stars fetched live (1h localStorage cache,
+  hardcoded fallbacks for offline / failure). The PDF resume is source
+  of truth — the homepage doesn't claim degrees, minors, or roles the
+  PDF doesn't.
+- **No invented numbers.** Reading time is computed from word count at
+  build. Stats in prose trace to data in
+  `personal/datadump/<post-slug>/`.
+- **Author voice over AI-styled summary.** Resume role descriptions and
+  post prose are written by the author. Empty placeholders beat
+  competent-sounding filler.
 
-## Layout notes
-
-- **Hero**: name, accent rule, short bio (~38ch), inline link rail. No
-  "running head", no colophon, no oversized glyphs
-- **Projects**: title row contains name, live star chip, and inline links on a
-  single baseline-aligned row. Hover tints the row with `--jade-veil`. Stack
-  badges live in their own row below
-- **Resume**: org + role + date range stays minimal. Prose body is optional —
-  if it's there, it's one tight sentence, not a bullet list
-- **Writing on home**: vertical list of compact post previews (date · category
-  · title · dek · read). No nested card chrome. "See all writing →" lives in
-  the section heading row, not floating below the strip
-- **Blog index** (`/blog`): same chrome as home cards. Title is "Writing" to
-  match the section name on home — `/blog` is the URL slug, "Writing" is the
-  identity
-
-## Technical choices
-
-- **Vite + React 19 + React Router 7** (data router). MDX via `@mdx-js/rollup`
-- **Tailwind v4** utility-first; `@theme inline` clears default color/font
-  namespaces so our tokens aren't competing with `--color-gray-500` etc.
-  Custom CSS only for things utilities can't express cleanly: paper-noise
-  pseudo + `mix-blend-mode`, multi-layer page-shadow tokens, scrollbar hiding
-- **Lenis** for smooth scrolling. Native `scroll-behavior: smooth` is removed
-  so it doesn't fight Lenis's wheel hijack. `HomeScrollSnap` registers
-  proximity snap targets on `.home-hero` and `.paper-card` so the page
-  gently anchors near section boundaries without being aggressive
-- **HashScroll** component watches `location.hash` and hands the target to
-  Lenis after the route mounts — needed because data router doesn't
-  auto-scroll to hash anchors and Lenis doesn't pick up native hash jumps
-- **Reading time**: computed at build from raw MDX (strip frontmatter, code,
-  tags, markdown punct → word count / 220 wpm). Frontmatter `readingTime`
-  remains as optional override
-- **Theme**: `[data-theme]` attribute on `<html>`, respects
-  `prefers-color-scheme` on first visit, persisted to localStorage thereafter
-- **Deploy**: GitHub Actions → Pages. `dist/index.html` copied to
-  `dist/404.html` so SPA routes don't 404 on direct-link / refresh
-
-## Open / waiting
-
-- Article body for `where-my-tokens-went` — author writing fresh. `draft: true`
-  until ready
-- Companion data repo at `personal/datadump/where-my-tokens-went/` — scaffold
-  done, waiting for actual aggregates + analysis script
-- Site `README.md` still the Vite default template

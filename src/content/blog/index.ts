@@ -8,7 +8,7 @@ type PostModule = {
 
 const modules = import.meta.glob<PostModule>('./*.mdx', { eager: true })
 
-// Same files imported as raw text — used for reading-time estimation.
+// Same files imported as raw text, used for reading-time estimation.
 // Vite's `query: '?raw', import: 'default'` returns the file as a string.
 const raw = import.meta.glob<string>('./*.mdx', {
   eager: true,
@@ -41,5 +41,4 @@ export const posts: Post[] = Object.entries(modules)
       module.frontmatter.readingTime ?? estimateReadingTime(raw[path] ?? ''),
     Component: module.default,
   }))
-  .filter((post) => !post.draft)
   .sort((left, right) => right.date.localeCompare(left.date))

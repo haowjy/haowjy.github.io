@@ -1,0 +1,207 @@
+---
+title: "75% of Reads Were Redundant"
+slug: "75-percent-redundant-reads"
+date: "2026-05-12"
+tags: ["ai", "agents", "llm", "analysis", "data"]
+description: "I scraped 3 months of AI agent sessions across Claude Code, Codex, and OpenCode. 75% of file reads were redundant."
+ogImage: "/og/default.png"
+---
+
+import { StatHero, ComparisonBlock, BarChart, DataTable, Callout, WorkspaceCacheDiagram } from '@/components/viz'
+
+# 75% of Reads Were Redundant
+
+I've been running AI coding agents heavily since February: Claude Code, Codex, OpenCode, plus a [multi-agent orchestration engine](https://github.com/meridian-flow/meridian-cli) I built on top of all three. After a [particularly expensive overnight session](/blog/what-happened-to-my-tokens), I wanted to understand my usage at scale. Not just one bad spawn. Everything.
+
+I wrote a script that pulls tool-call history from every session across all three harnesses. Claude Code stores sessions as JSONL. Codex has its own event format. OpenCode writes to SQLite. The script normalizes all three and extracts every file read: `Read` tool calls, `cat` and `sed` in bash, `grep` and `rg`. Then it tracks whether the agent had already seen that file earlier in the same session.
+
+The dataset covers 4,339 sessions from February through May 2026, across a dozen models, three harnesses, and 30+ agent roles.
+
+<StatHero value="75.1%" label="of file reads were redundant" detail="50,319 of 67,017 reads across 4,339 sessions" />
+
+Three out of four file reads were repeats. In a single agent session, the agent would read a file, keep working, then read that same file again later.
+
+## What Agents Actually Do All Day
+
+The redundancy clusters into three behaviors.
+
+**Read-edit-reread** is the biggest. An agent reads a file, edits it, reads it back. Interestingly, recent versions of Claude Code's Read tool now include an injected instruction: a warning not to re-read a file immediately after editing it, because Edit/Write would have errored if the change failed and the harness tracks file state. I found this by checking the [tracked system prompt history](https://github.com/Piebald-AI/claude-code-system-prompts). The instruction isn't hardcoded in the tool description. It's injected through a template variable (`ADDITIONAL_READ_NOTE`) that was made configurable in v2.1.91 on April 3, 2026, which means it could be model-dependent or feature-flagged. Anthropic clearly noticed the same pattern. My data likely spans sessions both with and without the instruction, and I can't distinguish which. Either way, I found 2,197 read-after-edit events across the dataset. The worst single session: 76.
+
+**Delegation restarts context.** My setup spawns agents from agents. Each spawn starts a fresh context window. The parent read the files and knows what matters; the child starts blind and re-reads everything. This is the expected cost of delegation. Fresh context means rediscovery. The question is whether better context handoff (passing file contents in the spawn, pre-digested `.context/` files) can reduce how much the child needs to re-read.
+
+**Compaction creates amnesia loops.** Agent fills context, compacts (lossy summary), forgets file contents, re-reads, fills context again. Sessions that compacted averaged 69 reads and cost $24.56. Sessions without: 12 reads, $2.18. One session compacted 29 times.
+
+## By Model
+
+<BarChart
+  data={[
+    { label: 'GPT-5.4', value: 80.4, count: 10730 },
+    { label: 'Haiku 4.5', value: 74.7, count: 9791 },
+    { label: 'Codex (5.3)', value: 71.4, count: 2058 },
+    { label: 'Opus 4.6', value: 64.6, count: 27133 },
+    { label: 'Sonnet 4.6', value: 63.3, count: 5675 },
+    { label: 'Opus 4.5', value: 57.3, count: 6016 },
+    { label: 'GPT-5.4-mini', value: 48.1, count: 1310 },
+    { label: 'Opus 4.7', value: 32.8, count: 509, mute: true },
+    { label: 'GPT-5.5', value: 29.5, count: 992, mute: true },
+  ]}
+  highlight="GPT-5.4"
+  caption="Redundancy rate by model (count = total reads). GPT-5.4 tops the chart with 80% redundancy across 10,730 reads."
+/>
+
+GPT-5.4 at 80% redundancy. GPT-5.5 at 30%. It almost looks like a model quality story, where newer models learn not to re-read.
+
+Then I sliced the same data by agent role:
+
+<BarChart
+  data={[
+    { label: 'refactor-coder', value: 74.9, count: 1437 },
+    { label: 'architect', value: 70.7, count: 9439 },
+    { label: 'coder', value: 69.4, count: 7087 },
+    { label: 'reviewer', value: 68.5, count: 8791 },
+    { label: 'tech-writer', value: 62.2, count: 585 },
+    { label: 'verifier', value: 58.1, count: 921 },
+    { label: 'smoke-tester', value: 51.9, count: 1943 },
+    { label: 'design-lead', value: 47.4, count: 2129 },
+    { label: 'explorer', value: 41.9, count: 2472 },
+    { label: 'product-lead', value: 37.1, count: 2629 },
+  ]}
+  highlight="refactor-coder"
+  caption="Redundancy rate by agent role (count = total reads). The role determines the rate, not the model."
+/>
+
+The model chart is really a role chart. GPT-5.4 was my leaf coder and reviewer, reading, editing, and re-reading all day. GPT-5.5 was my orchestrator. It delegates instead of reading. GPT-5.4-mini was my explorer. It reads files, writes a report, and stops. The spread tracks how much editing a role does, not how smart the model is.
+
+The explorer number is interesting on its own. 42% redundancy is high for a role that should read once and report. When I dug in, the problem was compaction: explorers filling their context window, compacting, losing the file contents they'd already read, and re-reading them. That's what led me to build the `.context/CONTEXT.md` system: pre-synthesized knowledge files colocated with the code. An explorer can understand a module in a few hundred lines of markdown instead of reading 20 raw source files. It also pushed me to change how I dispatch explorers: scope each one tightly to a single question, fan out multiple cheap spawns instead of one that tries to read everything. Both changes cut the compaction-driven re-reads significantly.
+
+## The Read-After-Edit Gap
+
+My read-after-edit (RAE) metric measures how often an agent re-reads a file immediately after editing it. It showed a dramatic split by harness:
+
+<DataTable
+  columns={[
+    { key: 'model', label: 'Model' },
+    { key: 'harness', label: 'Harness' },
+    { key: 'edits', label: 'Edits', align: 'right' },
+    { key: 'rae', label: 'Read-after-edit', align: 'right' },
+    { key: 'rate', label: 'RAE rate', align: 'right' },
+  ]}
+  rows={[
+    { model: 'Opus 4.6', harness: 'Claude', edits: '6,259', rae: '1,430', rate: '22.8%' },
+    { model: 'Opus 4.5', harness: 'Claude', edits: '543', rae: '84', rate: '15.5%' },
+    { model: 'Sonnet 4.6', harness: 'Claude', edits: '3,049', rae: '350', rate: '11.5%' },
+    { model: 'Opus 4.7', harness: 'Claude', edits: '267', rae: '35', rate: '13.1%' },
+    { model: 'GPT-5.5', harness: 'Codex', edits: '173', rae: '7', rate: '4.0%' },
+    { model: 'GPT-5.4', harness: 'Codex', edits: '689', rae: '7', rate: '1.0%' },
+    { model: 'Codex (5.3)', harness: 'Codex', edits: '846', rae: '2', rate: '0.2%' },
+  ]}
+  highlightCol="rate"
+  caption="Read-after-edit rates by model and harness. Claude models: 11-23%. Codex models: 0.2-4%."
+/>
+
+Claude Code agents re-read after 11-23% of edits. Codex agents: 0.2-4%. A 10-100x difference, consistent across every model in each harness and every week in my [time-series tracker](https://github.com/haowjy/datadump/tree/main/where-my-tokens-went).
+
+I didn't trust it. So I pulled 3 Codex coder sessions and 3 Claude coder sessions and classified what happens immediately after every edit:
+
+<DataTable
+  columns={[
+    { key: 'harness', label: 'Harness' },
+    { key: 'edits', label: 'Edits', align: 'right' },
+    { key: 'reread', label: 'Reread', align: 'right' },
+    { key: 'inline', label: 'Inline verify', align: 'right' },
+    { key: 'gitdiff', label: 'Git diff', align: 'right' },
+    { key: 'test', label: 'Test', align: 'right' },
+    { key: 'next', label: 'Next edit/read', align: 'right' },
+  ]}
+  rows={[
+    { harness: 'Codex (3 sessions)', edits: '28', reread: '0', inline: '5', gitdiff: '14', test: '0', next: '9' },
+    { harness: 'Claude (3 sessions)', edits: '42', reread: '5', inline: '0', gitdiff: '0', test: '10', next: '25' },
+  ]}
+  caption="Post-edit behavior: what agents do immediately after an edit, classified from transcript samples."
+/>
+
+Codex agents had zero explicit re-reads, but they did have 5 inline verifications (read-back embedded in the same bash command) and 14 `git diff` checks. Claude agents had 5 re-reads out of 42 edits, plus 10 test runs as the verification step. Both harnesses produce agents that verify their edits. The difference is the mechanism: Claude Code's separate `Read`/`Edit` tools make verification a distinct tool call that my analyzer counts. Codex's bash-based editing lets verification happen inside the same command or through `git diff`, which makes it invisible to a tool-call parser.
+
+The RAE gap is mostly a measurement artifact. A `git diff` after 12 edits is one command. Twelve separate `Read` calls after twelve `Edit` calls is 24 tool round-trips. The tool interface shapes what you can measure, not just what agents do.
+
+## Do Newer Models Fix This?
+
+The data is suggestive but not conclusive.
+
+<DataTable
+  columns={[
+    { key: 'model', label: 'Model' },
+    { key: 'spawns', label: 'Spawns', align: 'right' },
+    { key: 'redundancy', label: 'Redundancy', align: 'right' },
+    { key: 'rae_rate', label: 'RAE rate', align: 'right' },
+  ]}
+  rows={[
+    { model: 'Opus 4.5 (Nov 2025)', spawns: '198', redundancy: '57.3%', rae_rate: '15.5%' },
+    { model: 'Opus 4.6 (current)', spawns: '1,204', redundancy: '64.6%', rae_rate: '22.8%' },
+    { model: 'Opus 4.7 (newest)', spawns: '63', redundancy: '32.8%', rae_rate: '13.1%' },
+    { model: 'Sonnet 4.5 (Sep 2025)', spawns: '49', redundancy: '50.3%', rae_rate: 'n/a' },
+    { model: 'Sonnet 4.6 (current)', spawns: '642', redundancy: '63.3%', rae_rate: '11.5%' },
+  ]}
+  caption="Claude model generations. Opus 4.7 looks promising, but only 63 spawns."
+/>
+
+Opus 4.7 has the lowest redundancy of any Claude model (32.8%) and a lower RAE rate than 4.6. But it's only 63 spawns. I started using it recently and mostly for design work. The role confounding is heavy. Opus 4.6 looks worse than 4.5, but 4.6 was my workhorse coder while 4.5 was used for design and orchestration.
+
+On the GPT side, 5.5 (29.5% redundancy) looks great, but it was almost exclusively my orchestrator. It delegates instead of reading. I'd need to run 5.5 as a coder against 5.4 as a coder on the same tasks to really compare.
+
+I can't tell from this data whether newer models are better at this. The role assignment confounds everything. What I *can* say is that no model, on any harness, in any role, drops below 30% redundancy. Even the best case is still re-reading a third of its files.
+
+As for the "don't re-read" instruction, it's a Claude Code injection, and RAE is only a meaningful metric on Claude Code (Codex agents verify through `git diff` and inline commands that my parser doesn't count). So the question is narrow: does the instruction reduce RAE on the one harness where RAE measures what it claims to?
+
+I cut the Claude Code data at April 3, 2026, the v2.1.91 release date. Overall RAE drops slightly, from 21.1% before the release to 19.0% on or after it. But the role-controlled comparison points the other way: coder, architect, and reviewer all re-read more often after the cut.
+
+<DataTable
+  columns={[
+    { key: 'slice', label: 'Slice' },
+    { key: 'before_edits', label: 'Before edits', align: 'right' },
+    { key: 'before_rae', label: 'Before RAE', align: 'right' },
+    { key: 'after_edits', label: 'After edits', align: 'right' },
+    { key: 'after_rae', label: 'After RAE', align: 'right' },
+    { key: 'delta', label: 'Delta (pp)', align: 'right' },
+  ]}
+  rows={[
+    { slice: 'All Claude Code', before_edits: '2,619', before_rae: '21.1%', after_edits: '10,941', after_rae: '19.0%', delta: '-2.1' },
+    { slice: 'coder', before_edits: '320', before_rae: '16.6%', after_edits: '2,724', after_rae: '19.1%', delta: '+2.5' },
+    { slice: 'architect', before_edits: '1,190', before_rae: '24.4%', after_edits: '67', after_rae: '28.4%', delta: '+4.0' },
+    { slice: 'reviewer', before_edits: '577', before_rae: '19.8%', after_edits: '103', after_rae: '22.3%', delta: '+2.6' },
+  ]}
+  highlightCol="delta"
+  caption="Claude Code read-after-edit before and after April 3, 2026. The comparable roles require at least 25 edits on both sides of the cut."
+/>
+
+So I wouldn't claim the instruction helped. The aggregate number moves down, but the comparable role slices move up, and the post-release dataset has a lot of new roles that did not exist in the pre-release slice.
+
+## A Workspace Cache
+
+After every edit, the full file contents get dumped back into the conversation history as part of the tool result. Then the model re-reads the file anyway, adding another copy. The problem is not only compaction. The conversation history becomes both an event log and a storage layer. Old file snapshots stay in the transcript, new snapshots get appended, and the model has to infer current state from whichever copy is latest.
+
+The fix I want to eventually prototype: a workspace cache. An LRU of recently touched files, injected into the system prompt and kept up to date as the model works. When the model edits a file, the workspace copy updates automatically. When the model tries to Read a file that's already in the workspace, the harness returns a short acknowledgment instead of the full contents. The model already has the current version. No duplicate. No wasted tokens.
+
+The analogy I keep reaching for is working memory: small, active, immediately available state for the task at hand. Conversation history is more like an episodic trace: useful context, but chronological, noisy, and full of old versions. The workspace cache would give the agent one authoritative current copy while the transcript records what happened.
+
+<WorkspaceCacheDiagram />
+
+The tradeoff is prompt caching. Stale reads in conversation history are already cached: cheap per-token, immutable. Updating a file in the system prompt invalidates the cache from that point forward, so every edit means paying full input cost on the system prompt instead of cached cost. But the model was re-reading the file after edits anyway, paying full input cost on the re-read. The workspace cache shifts where those tokens live, not whether you pay for them. It might actually help with editing, since the model always has the current file state instead of a stale copy from three tool calls ago. The real risk is bloat: a system prompt stuffed with file contents could get large fast. When a file gets pushed out of the LRU, the harness injects a notice into the conversation history so the model knows it no longer has that file's contents and needs to re-read if it wants it back.
+
+Tool-call metrics can't measure this. The transcript audit showed they miss half the file access patterns. So the measurement runs at the filesystem level: mount the workspace through [LoggedFS](https://github.com/rflament/loggedfs), a FUSE overlay that transparently logs every file operation with timestamps and paths. The agent works normally on top of it. Every access gets logged regardless of whether it came from a `Read` tool call, `cat`, `sed -n`, `git diff`, or an inline bash pipeline.
+
+From the log, you build a per-file access timeline: written at T1, read at T2, written at T3, read at T4. The pattern is harness-agnostic.
+
+- Baseline: same tasks, no cache, LoggedFS logging all file access
+- Treatment: same tasks, workspace cache active, same LoggedFS setup
+- What to watch: total filesystem-level reads, unique files vs. repeated access, tokens per session, compaction count, task success
+- What could go wrong: system prompt bloat if too many files are cached, models confused by the short acknowledgment instead of full contents
+
+
+<Callout type="note" eyebrow="METHODOLOGY">
+"Redundant" = agent read a file it already read earlier in the same session, measured at the tool-call level. Conservative: doesn't track partial re-reads proportionally, and as the transcript audit showed, misses verification that happens inside compound bash commands. The RAE split between harnesses is partly a measurement artifact of different tool interfaces. Cost estimates use published API pricing on actual token counts; subscription plans mask real cost. Sessions from all three harnesses are deduplicated where they overlap. Analysis scripts, time-series tracker, and April 3 before/after cut are on [GitHub](https://github.com/haowjy/datadump/tree/main/where-my-tokens-went).
+</Callout>
+
+---
+
+*4,339 sessions across Claude Code, Codex, and OpenCode. February through May 2026. 12 models, 30+ agent roles. See [What Happened to My Tokens?](/blog/what-happened-to-my-tokens) for the case study that started this analysis.*

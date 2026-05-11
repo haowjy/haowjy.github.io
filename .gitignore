@@ -27,5 +27,6 @@ dist-ssr
 .codex
 .mars
 .opencode
+.playwright-cli
 
 # Meridian / mars tooling config (user-local, may contain personal preferences)
