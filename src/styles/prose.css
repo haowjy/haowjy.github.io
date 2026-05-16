@@ -295,6 +295,16 @@
   font-variant-numeric: tabular-nums;
 }
 
+.post-layout__draft-badge {
+  color: var(--amber);
+  font-style: italic;
+}
+
+.archive__draft-badge {
+  color: var(--amber);
+  font-style: italic;
+}
+
 .post-layout__folio {
   color: var(--jade);
 }

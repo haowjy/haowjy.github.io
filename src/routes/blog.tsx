@@ -116,6 +116,12 @@ export default function WritingRoute() {
                                 <span>{post.readingTime} MIN</span>
                               </>
                             )}
+                            {post.draft && (
+                              <>
+                                <span aria-hidden="true">·</span>
+                                <span className="archive__draft-badge">working notes</span>
+                              </>
+                            )}
                           </p>
                           <h2 className="archive__entry-title">
                             {post.title}

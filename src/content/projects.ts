@@ -18,8 +18,8 @@ export const projects: Project[] = [
     description:
       'Agent orchestration CLI. Decompose complex workflows across specialized agents with model routing, spawn management, and structured handoffs.',
     stack: ['Python', 'Rust', 'MCP', 'FastMCP'],
-    starSource: { repo: 'meridian-flow/meridian-cli', fallback: 0 },
-    links: [{ label: 'github', href: 'https://github.com/meridian-flow/meridian-cli' }],
+    starSource: { repo: 'haowjy/meridian-cli', fallback: 0 },
+    links: [{ label: 'github', href: 'https://github.com/haowjy/meridian-cli' }],
   },
   {
     name: 'creative-writing-skills',
@@ -33,8 +33,8 @@ export const projects: Project[] = [
     description:
       'Package manager for agent profiles, skills, MCP servers, and hooks. Install and share agent configurations across projects.',
     stack: ['Rust', 'Python'],
-    starSource: { repo: 'meridian-flow/mars-agents', fallback: 0 },
-    links: [{ label: 'github', href: 'https://github.com/meridian-flow/mars-agents' }],
+    starSource: { repo: 'haowjy/mars-agents', fallback: 0 },
+    links: [{ label: 'github', href: 'https://github.com/haowjy/mars-agents' }],
   },
   {
     name: 'Meridian Flow',

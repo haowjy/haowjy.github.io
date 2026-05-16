@@ -5,19 +5,24 @@ date: "2026-05-11"
 tags: ["ai", "agents", "llm", "analysis"]
 description: "198 agent spawns ran overnight. The next morning, my Codex usage looked very different."
 ogImage: "/og/default.png"
+draft: true
 ---
 
-import { ComparisonBlock, BarChart, DataTable, CostRamp } from '@/components/viz'
+import { ComparisonBlock, BarChart, DataTable, CostRamp, Callout } from '@/components/viz'
 
 # What Happened to My Tokens?
 
-I'd been having trouble spending my Codex allocation. Sixty percent left with a week in the billing cycle. Then I let my orchestrator run overnight.
+<Callout type="errata" eyebrow="COST CORRECTION">
+The original cost estimates double-counted Codex cache-read tokens — adding them on top of input tokens instead of subtracting before pricing. The per-spawn costs below are corrected: $57.99 → $11.10, $22.24 → $4.46, $15.67 → $3.18. The three-spawn total drops from $95.90 to $18.74. The $15,068 three-month estimate is similarly overstated; reapplied to the broader dataset, the corrected total is ~$17,200 across 10,895 sessions. Read counts, redundancy percentages, and all structural analysis are unaffected.
+</Callout>
 
-I build [meridian-cli](https://github.com/haowjy), a multi-agent orchestration engine that sits on top of Claude Code, Codex, and OpenCode. Agents spawn agents: a product lead spawns a tech lead, which spawns coders, reviewers, and smoke-testers. Each spawn gets a fresh context window. For this job, a major architecture refactor, meridian-cli ran 198 spawns over about eight hours while I slept.
+The codex $200 plan (20x) was so freeing. For the past few weeks, I'd barely be able to use half. However, one night, as I swapped over the full workflow to Codex, 50% of it was gone overnight.
+
+I'm building [meridian-cli](https://github.com/haowjy/meridian-cli), a multi-agent orchestration engine that sits on top of Claude Code, Codex, and OpenCode. Agents spawn agents: a product lead spawns a tech lead, which spawns coders, reviewers, and smoke-testers. Each spawn gets a fresh context window. For this job, a major architecture refactor, meridian-cli ran 198 spawns over about eight hours while I slept.
 
 The next morning, my Codex usage had dropped from about 60% remaining to about 10%.
 
-That drop is what made me pull the session data apart. I wrote analysis scripts to read tool-call history from agent sessions and estimate cost per spawn. Three spawns jumped out immediately: all qa-leads, all on Codex, all wildly expensive.
+That drop is what made me pull the session data apart. I wrote analysis scripts to read tool-call history from agent sessions and estimate cost per spawn. Three spawns jumped out: all qa-leads, all on Codex, all disproportionately expensive for the work they did.
 
 <DataTable
   columns={[
@@ -29,17 +34,17 @@ That drop is what made me pull the session data apart. I wrote analysis scripts 
     { key: 'work', label: 'Work item' },
   ]}
   rows={[
-    { cost: '$57.99', input: '20.9M', output: '26K', ratio: '800:1', duration: '36 min', work: 'test-suite-redesign' },
-    { cost: '$22.24', input: '7.9M', output: '20K', ratio: '~400:1', duration: '10 min', work: 'windows-compat-audit' },
-    { cost: '$15.67', input: '5.5M', output: '25K', ratio: '220:1', duration: '10 min', work: 'reaper-escape-fix' },
+    { cost: '$11.10', input: '20.9M', output: '26K', ratio: '800:1', duration: '36 min', work: 'test-suite-redesign' },
+    { cost: '$4.46', input: '7.9M', output: '20K', ratio: '~400:1', duration: '10 min', work: 'windows-compat-audit' },
+    { cost: '$3.18', input: '5.5M', output: '25K', ratio: '220:1', duration: '10 min', work: 'reaper-escape-fix' },
   ]}
   highlightRow={0}
-  caption="Three qa-lead spawns: $95.90 total -- 22% of my two-day spend across 198 spawns."
+  caption="Three qa-lead spawns: $18.74 total."
 />
 
-Three spawns, $96. Twenty-two percent of everything I spent in two days, across 198 spawns.
+Three spawns, $18.74. Across 198 spawns.
 
-The worst one -- $57.99 -- pushed 20.9 million input tokens through GPT 5.4 in 36 minutes and produced 26,000 tokens of output. An 800:1 input-to-output ratio. It didn't even delegate to an explorer. It read files directly, spawned 7 coders and 2 reviewers, then spent most of its budget polling for their results -- 36 spawn-wait cycles, each one a full round-trip through a 5.5 million token context window.
+The worst one -- $11.10 -- pushed 20.9 million input tokens through GPT 5.4 in 36 minutes and produced 26,000 tokens of output. An 800:1 input-to-output ratio. It didn't even delegate to an explorer. It read files directly, spawned 7 coders and 2 reviewers, then spent most of its budget polling for their results -- 36 spawn-wait cycles, each one a full round-trip through a 5.5 million token context window.
 
 <BarChart
   data={[
@@ -52,7 +57,7 @@ The worst one -- $57.99 -- pushed 20.9 million input tokens through GPT 5.4 in 3
     { label: 'tech-lead', value: 4.4, count: '$19' },
   ]}
   highlight="qa-lead"
-  caption="Cost by agent role. Three qa-lead spawns account for nearly all of that $96."
+  caption="Cost by agent role (original uncorrected estimate — see errata). Corrected per-spawn costs are in the table above."
 />
 
 ## What I Tried First
@@ -67,7 +72,7 @@ First, I changed the explorer process: start from synthesized project knowledge 
 
 I'm not sure qi was essential. A better explorer prompt that pointed at the KB first might have produced the same improvement. The measured change was narrower: this explorer stopped starting cold from source.
 
-The result looked good. A previous explorer run cost `$2.92` and churned through compaction. The new run cost `$0.91`, did not compact, and produced a better report. That comparison is also too clean. Some cost moved upstream into maintaining the inline context. In this work item, the code-mirror agents cost another `$0.66`, so the fairer comparison is closer to `$2.92` versus `$1.57`. Still cheaper, but not a free lunch.
+The result looked good. A previous explorer run cost more and churned through compaction. The new run cost `$0.11`, did not compact, and produced a better report. That comparison is also too clean. Some cost moved upstream into maintaining the inline context. In this work item, the code-mirror agents cost another `$0.66`, so the fairer comparison is closer to the old explorer plus overhead versus `$0.77` for the new setup. Still cheaper, but not a free lunch.
 
 Second, I reread the explorer agent description and tightened the scope. The description now says to keep each explorer spawn to one module or one question. Cheap reading agents only stay cheap when the task is narrow enough for the smaller model to keep the relevant context in view. Broad "go understand this area" prompts were exactly how the explorer layer turned into compaction churn.
 
@@ -77,7 +82,7 @@ I thought those changes were enough: cheaper explorer, tighter scope, explicit w
 
 ## The Transcript
 
-The third qa-lead transcript showed what was still happening. This was the cheapest of the three outliers -- $15.67 -- and it was already running with the improved explorer. Cleaned up from the raw Codex session log:
+The third qa-lead transcript showed what was still happening. This was the cheapest of the three outliers -- $3.18 -- and it was already running with the improved explorer. Cleaned up from the raw Codex session log:
 
 ```
 ┌─ qa-lead (GPT 5.4 on Codex) ─────────────────────────┐
@@ -116,7 +121,7 @@ The third qa-lead transcript showed what was still happening. This was the cheap
 
   $ meridian spawn wait p162
   ...
-  → p162 succeeded. $0.91, 265 seconds.
+  → p162 succeeded. $0.11, 265 seconds.
 
   $ meridian session log p162 --last 20
   ── 51,000 tokens of the explorer's session transcript ──
@@ -125,10 +130,10 @@ The third qa-lead transcript showed what was still happening. This was the cheap
   [spawns reviewer, waits, executes, runs tests]
   → 23 passed, 1022 passed (full suite)
 
-└────────────────────── total: $15.67, 639 seconds ────┘
+└────────────────────── total: $3.18, 639 seconds ────┘
 ```
 
-The explorer did its part. It finished in 265 seconds with a comprehensive KEEP/DELETE report for all 6 test files, for $0.91. The qa-lead -- after the system told it "you MUST run: meridian spawn wait" -- read the same files itself, pulled the explorer's full 51,000-token session transcript instead of the 2,000-token structured report, then wrote a cleanup strategy that closely mirrored what the explorer had already recommended.
+The explorer did its part. It finished in 265 seconds with a comprehensive KEEP/DELETE report for all 6 test files. The qa-lead -- after the system told it "you MUST run: meridian spawn wait" -- read the same files itself, pulled the explorer's full 51,000-token session transcript instead of the 2,000-token structured report, then wrote a cleanup strategy that closely mirrored what the explorer had already recommended.
 
 ## The Explorer Had the Answer
 
@@ -157,14 +162,14 @@ The qa-lead's final cleanup strategy -- written after all the redundant reading 
 <ComparisonBlock
   left={{
     eyebrow: "Explorer",
-    value: "$0.91",
+    value: "$0.11",
     label: "265 seconds, no compaction",
     sublabel: "991K input tokens — used .context/ first",
     tone: "jade"
   }}
   right={{
     eyebrow: "QA-lead",
-    value: "$15.67",
+    value: "$3.18",
     label: "639 seconds, 9 redundant reads",
     sublabel: "5.5M input tokens — 220:1 input-to-output ratio",
     tone: "amber"
@@ -187,14 +192,14 @@ After this audit, I changed qa-lead's default: Sonnet on Claude Code instead of 
   }}
   right={{
     eyebrow: "QA-lead (Codex harness)",
-    value: "$15.67",
+    value: "$3.18",
     label: "2 children coordinated",
     sublabel: "Polling wait — 5.5M tokens per yield",
     tone: "amber"
   }}
 />
 
-Same work item, different role. The tech-lead ran on Claude, coordinated 10 child agents across 5 implementation phases, caught findings, ran a corrective phase, and shipped for $3.27. The qa-lead ran on Codex, coordinated 2 children, and cost $15.67. That is not a controlled comparison -- tech-lead and qa-lead were doing different jobs -- but it made the harness problem hard to ignore. At minimum, the Claude run showed what efficient coordination looked like when waiting was actually blocking.
+Same work item, different role. The tech-lead ran on Claude, coordinated 10 child agents across 5 implementation phases, caught findings, ran a corrective phase, and shipped for $3.27. The qa-lead ran on Codex, coordinated 2 children, and cost $3.18. Five times the coordination for nearly the same price. That is not a controlled comparison -- tech-lead and qa-lead were doing different jobs -- but the asymmetry is hard to ignore. At minimum, the Claude run showed what efficient coordination looked like when waiting was actually blocking.
 
 The difference is how the harness handles waiting. When a Claude Code agent calls `spawn wait`, it blocks -- one tool call, the agent sleeps, one result when the child finishes. When a Codex agent does the same thing, my harness can't truly block. Codex's interaction model is request-response: the agent issues a tool call, the harness sends the result, the model processes the full context window and decides what to do next. To implement "wait," meridian yields control back to the session periodically, and the model has to re-enter and decide to keep waiting. Each yield is a full context-window round-trip. Even with 97% cache hits, 15 yields at 5.5M tokens each is real money.
 
@@ -210,7 +215,7 @@ For today's models, reliability has to live partly in the harness. If waiting ma
 
 ## While I Had the Parser Open
 
-One side effect of doing this analysis: I got a better feel for how much work a flat-rate subscription can hide. Across the broader agent-session dataset, the API-rate estimate came out to about `$15,068` over three months. I did not pay that as API spend; the work ran through a messy mix of subscriptions, changing limits, and only some direct API-equivalent accounting.
+One side effect of doing this analysis: I got a better feel for how much work a flat-rate subscription can hide. Across the broader agent-session dataset, the API-rate estimate came out to about `$17,200` over three months. I did not pay that as API spend; the work ran through a messy mix of subscriptions, changing limits, and only some direct API-equivalent accounting.
 
 <CostRamp
   data={[
@@ -219,15 +224,15 @@ One side effect of doing this analysis: I got a better feel for how much work a 
     { period: 'W08', value: 52, label: '' },
     { period: 'W09', value: 61, label: 'Mar' },
     { period: 'W10', value: 351, label: '' },
-    { period: 'W11', value: 968, label: '' },
-    { period: 'W15', value: 1671, label: 'Apr' },
-    { period: 'W16', value: 1072, label: '' },
-    { period: 'W17', value: 1767, label: '' },
-    { period: 'W18', value: 2732, label: 'May' },
-    { period: 'W19', value: 6325, label: '' },
+    { period: 'W11', value: 963, label: '' },
+    { period: 'W15', value: 377, label: 'Apr' },
+    { period: 'W16', value: 1085, label: '' },
+    { period: 'W17', value: 2819, label: '' },
+    { period: 'W18', value: 3615, label: 'May' },
+    { period: 'W19', value: 4999, label: '' },
   ]}
   peak="W19"
-  caption="Estimated weekly cost at API rates across the broader agent-session dataset."
+  caption="Estimated weekly cost at API rates, corrected for Codex cache-token double-counting."
 />
 
 ## What I'm Building Next
