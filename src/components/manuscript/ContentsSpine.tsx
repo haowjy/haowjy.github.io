@@ -55,7 +55,9 @@ export default function ContentsSpine({
     const inside =
       currentPage >= pendingIndex &&
       (nextStart == null || currentPage < nextStart)
-    if (inside) setPendingIndex(null)
+    if (!inside) return
+    const t = window.setTimeout(() => setPendingIndex(null), 0)
+    return () => window.clearTimeout(t)
   }, [currentPage, pendingIndex, entries])
 
   // Safety timeout: smooth scroll can stall if the user interferes (wheel,

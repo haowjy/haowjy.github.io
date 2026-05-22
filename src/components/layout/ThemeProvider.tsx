@@ -14,11 +14,15 @@ import {
 } from '@/lib/theme'
 
 export function ThemeProvider({ children }: PropsWithChildren) {
-  const [theme, setTheme] = useState<Theme>(() => {
+  const [theme, setTheme] = useState<Theme>('light')
+
+  useEffect(() => {
     const preferredTheme = getPreferredTheme()
     applyTheme(preferredTheme)
-    return preferredTheme
-  })
+    if (preferredTheme === 'light') return
+    const t = window.setTimeout(() => setTheme(preferredTheme), 0)
+    return () => window.clearTimeout(t)
+  }, [])
 
   useEffect(() => {
     applyTheme(theme)

@@ -1,8 +1,10 @@
+import { useEffect } from 'react'
 import { Outlet, ScrollRestoration, useLocation } from 'react-router'
 import Footer from '@/components/layout/Footer'
 import HashScroll from '@/components/layout/HashScroll'
 import Header from '@/components/layout/Header'
 import { ThemeProvider } from '@/components/layout/ThemeProvider'
+import { applyPageMeta, getPageMeta } from '@/lib/pageMeta'
 
 export default function App() {
   const location = useLocation()
@@ -13,10 +15,15 @@ export default function App() {
   // renders unconditionally so React state (scrolled, hover-expand) stays
   // alive when crossing between routes without a remount flash.
   const isManuscript = location.pathname === '/'
+  const isBrowser = typeof document !== 'undefined'
+
+  useEffect(() => {
+    applyPageMeta(getPageMeta(location.pathname))
+  }, [location.pathname])
 
   return (
     <ThemeProvider>
-      <ScrollRestoration />
+      {isBrowser && <ScrollRestoration />}
       <HashScroll />
       <div className="site-shell">
         <Header isManuscript={isManuscript} />
