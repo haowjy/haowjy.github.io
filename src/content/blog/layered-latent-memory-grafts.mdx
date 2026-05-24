@@ -440,7 +440,7 @@ The [autoresearch-llmg](https://github.com/haowjy/autoresearch-llmg) harness is 
 Early exploratory runs **P0-TW-01** and **P0-TW-01b** used a collapsed subject index (~329 docs) and are **deprecated**—their headline numbers are not comparable to v2 without re-baselining.
 
 <DataTable
-  caption="Phase 0 baselines on corpus v2 (official / calibrate; recall@5). Harness = BM25 or hybrid over exported index; agent = Gemma 4 tool loop without mid-episode coaching."
+  caption="Phase 0 baselines on corpus v2 (recall@5). Harness = calibrate Wave A. Agent = official v2 (8 steps, May 2026); v3 re-baseline with 16 steps + GPU KV cache is in flight—table updates when that run finishes."
   columns={[
     { key: 'cell', label: 'Cell' },
     { key: 'test', label: 'test (subject / temporal)' },

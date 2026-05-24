@@ -4,7 +4,7 @@ import { author } from '@/content/site'
 const SITE_URL = 'https://haowjy.github.io'
 const SITE_TITLE = `${author.name} — ${author.role}`
 const DEFAULT_DESCRIPTION = author.focus
-const BLOG_DESCRIPTION = 'Whatever is in a blog.'
+const BLOG_DESCRIPTION = 'Blog of ideas.'
 
 export type PageMeta = {
   title: string

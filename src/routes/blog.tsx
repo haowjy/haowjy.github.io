@@ -71,7 +71,7 @@ export default function WritingRoute() {
       <div className="archive__page paper-noise">
         <header className="archive__head">
           <h1 className="archive__title">Blog</h1>
-          <p className="archive__dek">Whatever is in a blog.</p>
+          <p className="archive__dek">Blog of ideas.</p>
           <p className="archive__count">
             {posts.length} {posts.length === 1 ? 'entry' : 'entries'}
           </p>
