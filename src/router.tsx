@@ -1,5 +1,7 @@
 import { Navigate, useLocation, type RouteObject } from 'react-router'
-import App from '@/App'
+import AppShell from '@/components/layout/AppShell'
+import ManuscriptLayout from '@/components/layout/ManuscriptLayout'
+import NotesLayout from '@/components/layout/NotesLayout'
 import HomeRoute from '@/routes/index'
 import NotesIndexRoute from '@/routes/notes'
 import NotesPostRoute from '@/routes/notes/$slug'
@@ -14,19 +16,32 @@ function BlogRedirect() {
 export const appRoutes: RouteObject[] = [
   {
     path: '/',
-    Component: App,
+    Component: AppShell,
     children: [
       {
-        index: true,
-        Component: HomeRoute,
+        handle: { section: 'manuscript' },
+        Component: ManuscriptLayout,
+        children: [
+          {
+            index: true,
+            Component: HomeRoute,
+          },
+        ],
       },
       {
         path: 'notes',
-        Component: NotesIndexRoute,
-      },
-      {
-        path: 'notes/:slug',
-        Component: NotesPostRoute,
+        handle: { section: 'notes' },
+        Component: NotesLayout,
+        children: [
+          {
+            index: true,
+            Component: NotesIndexRoute,
+          },
+          {
+            path: ':slug',
+            Component: NotesPostRoute,
+          },
+        ],
       },
       {
         path: 'blog',

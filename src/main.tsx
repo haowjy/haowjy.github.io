@@ -4,10 +4,6 @@ import { RouterProvider, createBrowserRouter } from 'react-router'
 import { appRoutes } from '@/router'
 import './styles/global.css'
 import './styles/home.css'
-import './styles/prose.css'
-import './styles/notes-reader.css'
-import './styles/notes-prose.css'
-import './styles/notes-viz.css'
 
 const router = createBrowserRouter(appRoutes)
 const container = document.getElementById('root')!

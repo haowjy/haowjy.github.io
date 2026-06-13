@@ -1,39 +1,20 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router'
+import { MANUSCRIPT_GOTO_EVENT } from '@/components/manuscript/navigation'
 import ThemeToggle from '@/components/ui/ThemeToggle'
 import { useReducedMotion } from '@/hooks/useReducedMotion'
+import { useSiteSection } from '@/hooks/useSiteSection'
 
-type Props = {
-  /** True on the home/manuscript route. Drives CSS that hides the header
-   *  on desktop so the manuscript stays chromeless, while keeping it
-   *  visible on mobile where one consistent header reads better. */
-  isManuscript?: boolean
-}
-
-/**
- * Custom-event channel used for SAME-ROUTE section navigation on the
- * manuscript. Header lives outside the manuscript route component and
- * doesn't own the page list — instead of prop-drilling or context, it
- * dispatches an event the home route listens for. Cross-route nav still
- * goes through `navigate(`/#id`)` so React Router handles route entry,
- * and the home route's hash effect lands the scroll once pages mount.
- *
- * Event detail is the section id (`about` | `projects` | `resume` |
- * `writing`).
- */
-export const MANUSCRIPT_GOTO_EVENT = 'manuscript:goto'
-
-export default function Header({ isManuscript = false }: Props) {
+export default function Header() {
   const [scrolled, setScrolled] = useState(false)
   const [portfolioHover, setPortfolioHover] = useState(false)
   const hoverTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
   const location = useLocation()
   const navigate = useNavigate()
   const reducedMotion = useReducedMotion()
-
-  const isNotes =
-    location.pathname.startsWith('/notes') ||
-    location.pathname.startsWith('/blog')
+  const section = useSiteSection()
+  const isManuscript = section === 'manuscript'
+  const isNotes = section === 'notes'
   // Section subnav (About · Projects · Resume · Writing) only belongs
   // under Portfolio. On blog routes the header sheds the second row /
   // hover-expanded sub-links, which also gives the paper more vertical

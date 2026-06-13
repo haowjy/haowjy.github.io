@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useLocation } from 'react-router'
-import { MANUSCRIPT_GOTO_EVENT } from '@/components/layout/Header'
+import { MANUSCRIPT_GOTO_EVENT } from '@/components/manuscript/navigation'
 import ContentsSpine from '@/components/manuscript/ContentsSpine'
 import { scrollToPage } from '@/components/manuscript/pageGeometry'
 import PageStack from '@/components/manuscript/PageStack'
@@ -26,7 +26,6 @@ import {
 } from '@/content/resume'
 import { useReducedMotion } from '@/hooks/useReducedMotion'
 import { usePagination } from '@/hooks/usePagination'
-import '@/styles/manuscript.css'
 
 /**
  * Home route: the manuscript orchestrator.
