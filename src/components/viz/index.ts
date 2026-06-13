@@ -1,7 +1,0 @@
-export { BarChart } from './BarChart'
-export { Callout } from './Callout'
-export { ComparisonBlock } from './ComparisonBlock'
-export { CostRamp } from './CostRamp'
-export { DataTable } from './DataTable'
-export { FigureLead } from './StatHero'
-export { WorkspaceCacheDiagram } from './WorkspaceCacheDiagram'

@@ -1,4 +1,3 @@
-import { readFileSync } from 'node:fs'
 import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vite'
 import mdx from '@mdx-js/rollup'
@@ -11,17 +10,6 @@ import remarkFrontmatter from 'remark-frontmatter'
 import remarkGfm from 'remark-gfm'
 import remarkMdxFrontmatter from 'remark-mdx-frontmatter'
 import remarkSmartypants from 'remark-smartypants'
-
-const mdxRawLoader = {
-  name: 'mdx-raw-loader',
-  enforce: 'post' as const,
-  transform(_code: string, id: string) {
-    if (!id.includes('.mdx?raw')) return null
-
-    const [path] = id.split('?')
-    return `export default ${JSON.stringify(readFileSync(path, 'utf8'))}`
-  },
-}
 
 export default defineConfig({
   server: {
@@ -52,7 +40,6 @@ export default defineConfig({
     }),
     react(),
     tailwindcss(),
-    mdxRawLoader,
   ],
   resolve: {
     alias: {

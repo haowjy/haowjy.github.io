@@ -1,6 +1,6 @@
 import type { PropsWithChildren } from 'react'
 import { Link } from 'react-router'
-import TechBadge from '@/components/home/TechBadge'
+import TechBadge from '@/components/ui/TechBadge'
 import type { PostFrontmatter } from '@/types/post'
 
 type Neighbor = {
@@ -53,10 +53,18 @@ export default function PostLayout({ post, prev, next, children }: PostLayoutPro
 
           <p className="post-layout__eyebrow">
             <span className="post-layout__kind">Note</span>
-            <span aria-hidden="true">·</span>
-            <span>{post.date}</span>
-            <span aria-hidden="true">·</span>
-            <span>{post.readingTime} min read</span>
+            {post.date && (
+              <>
+                <span aria-hidden="true">·</span>
+                <span>{post.date}</span>
+              </>
+            )}
+            {post.readingTime != null && post.readingTime > 0 && (
+              <>
+                <span aria-hidden="true">·</span>
+                <span>{post.readingTime} min read</span>
+              </>
+            )}
             {post.draft && (
               <>
                 <span aria-hidden="true">·</span>
@@ -67,8 +75,10 @@ export default function PostLayout({ post, prev, next, children }: PostLayoutPro
 
           <h1>{post.title}</h1>
 
-          {post.description && (
-            <p className="post-layout__dek">{post.description}</p>
+          {(post.description || post.pullQuote) && (
+            <p className="post-layout__dek">
+              {post.description ?? post.pullQuote}
+            </p>
           )}
 
           {post.tags.length > 0 && (
@@ -134,9 +144,13 @@ export default function PostLayout({ post, prev, next, children }: PostLayoutPro
           </nav>
 
           <div className="post-layout__colophon">
-            <span>{post.date}</span>
-            <span aria-hidden="true">·</span>
-            <span>{post.readingTime} min read</span>
+            {post.date && <span>{post.date}</span>}
+            {post.date && post.readingTime != null && post.readingTime > 0 && (
+              <span aria-hidden="true">·</span>
+            )}
+            {post.readingTime != null && post.readingTime > 0 && (
+              <span>{post.readingTime} min read</span>
+            )}
           </div>
         </footer>
       </div>

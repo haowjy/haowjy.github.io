@@ -1,5 +1,5 @@
-import StarChip from '@/components/home/StarChip'
-import TechBadge from '@/components/home/TechBadge'
+import StarChip from '@/components/ui/StarChip'
+import TechBadge from '@/components/ui/TechBadge'
 import type { Project } from '@/content/projects'
 
 type Props = {

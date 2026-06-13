@@ -118,6 +118,18 @@
   display: none;
 }
 
+.notes-reader .note-prose .viz-comparison__side--jade .viz-comparison__value {
+  color: var(--jade);
+}
+
+.notes-reader .note-prose .viz-comparison__side--amber .viz-comparison__value {
+  color: var(--amber);
+}
+
+.notes-reader .note-prose .viz-comparison__side--ink .viz-comparison__value {
+  color: var(--ink);
+}
+
 /* Callout */
 .notes-reader .note-prose .viz-callout {
   padding: 0.65rem 0 0.65rem 1rem;

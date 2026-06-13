@@ -1,5 +1,6 @@
 import { Link } from 'react-router'
 import type { Post } from '@/types/post'
+import NoteListItem from '@/components/notes/NoteListItem'
 
 type Props = {
   posts: Post[]
@@ -29,45 +30,14 @@ export default function WritingPage({ posts }: Props) {
       </header>
 
       <ul className="list-none p-0 m-0 flex-1 min-h-0 overflow-hidden flex flex-col">
-        {posts.map((p, i) => {
-          const date = new Date(p.date).toISOString().slice(0, 10)
-          const category = p.tags?.[0]?.toUpperCase() ?? 'ESSAY'
-          return (
-            <li
-              key={p.slug}
-              className={
-                i > 0
-                  ? 'border-t border-rule pt-5 mt-5'
-                  : ''
-              }
-            >
-              <Link
-                to={`/notes/${p.slug}`}
-                className="group block no-underline text-ink"
-              >
-                <div className="font-mono text-[0.7rem] tracking-meta uppercase text-ink-mute flex flex-wrap gap-x-2 gap-y-0.5">
-                  <span>{date}</span>
-                  <span aria-hidden="true">·</span>
-                  <span>{category}</span>
-                  {p.readingTime != null && (
-                    <>
-                      <span aria-hidden="true">·</span>
-                      <span>{p.readingTime} min</span>
-                    </>
-                  )}
-                </div>
-                <h3 className="mt-1.5 mb-0 font-display font-normal text-[clamp(1.25rem,0.8vw+1rem,1.55rem)] leading-snug text-ink transition-colors group-hover:text-jade-deep">
-                  {p.title}
-                </h3>
-                {p.description && (
-                  <p className="mt-1.5 mb-0 max-w-[60ch] text-body-s text-ink-soft line-clamp-2">
-                    {p.description}
-                  </p>
-                )}
-              </Link>
-            </li>
-          )
-        })}
+        {posts.map((p, i) => (
+          <li
+            key={p.slug}
+            className={i > 0 ? 'border-t border-rule pt-5 mt-5' : ''}
+          >
+            <NoteListItem post={p} variant="manuscript" />
+          </li>
+        ))}
       </ul>
     </div>
   )

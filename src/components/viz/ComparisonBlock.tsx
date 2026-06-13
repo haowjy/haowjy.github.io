@@ -18,9 +18,11 @@ function ComparisonSide({
   value,
   label,
   sublabel,
+  tone,
 }: ComparisonSide) {
+  const toneClass = tone ? `viz-comparison__side--${tone}` : ''
   return (
-    <section className="viz-comparison__side">
+    <section className={`viz-comparison__side${toneClass ? ` ${toneClass}` : ''}`}>
       {eyebrow ? <p className="viz-comparison__eyebrow">{eyebrow}</p> : null}
       <p className="viz-comparison__value">{value}</p>
       <p className="viz-comparison__label">{label}</p>
