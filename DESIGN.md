@@ -51,12 +51,13 @@ Arial) are out.
 | Body | All running prose | IBM Plex Sans |
 | Mono | Eyebrow meta, dates, page numbers, link rails | JetBrains Mono |
 
-Fraunces is loaded but unused — available for experiments.
+Light and dark themes share token names; dark overrides values.
+Components do not fork. Notes uses the same stack as the manuscript.
 
 ### Color tokens
 
 Semantic names are stable; specific values are open to revision. Defined
-in `src/styles/global.css`:
+in `src/styles/tokens/colors.css`:
 
 - `--paper`, `--paper-edge` — page surface, slightly differentiated for
   cards
@@ -66,9 +67,6 @@ in `src/styles/global.css`:
 - `--amber`, `--gold` — sparing; `--gold` (`#eac54f`) reserved for the
   GitHub star icon to match GH's own
 - `--rule`, `--rule-strong` — borders and underlines
-
-Light and dark themes share token names; dark overrides values.
-Components do not fork.
 
 ### Page shadow
 

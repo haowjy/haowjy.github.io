@@ -18,6 +18,8 @@
 
 .notes-reader .archive__title {
   margin: 0;
+  font-family: var(--font-display);
+  font-weight: 400;
   font-size: var(--type-display-l);
   line-height: 0.95;
   letter-spacing: var(--tracking-display);
@@ -53,7 +55,10 @@
   flex-wrap: wrap;
   align-items: baseline;
   gap: 0.45rem 0.6rem;
-  font-size: var(--type-body-s);
+  font-family: var(--font-mono);
+  font-size: var(--type-meta);
+  letter-spacing: var(--tracking-meta);
+  text-transform: uppercase;
   color: var(--ink-mute);
   font-variant-numeric: tabular-nums;
 }
@@ -203,78 +208,45 @@
   }
 }
 
-.site-shell--notes {
-  --font-display: var(--font-notes);
-  --font-body: var(--font-notes);
-  font-family: var(--font-body);
-  font-optical-sizing: auto;
-  font-variation-settings: var(--fraunces-soft);
-}
-
 .site-main-notes {
-  --notes-header-offset: 4.5rem;
   flex: 1;
   width: 100%;
   max-width: none;
   margin: 0;
-  padding-block: var(--notes-header-offset) 4rem;
-  /* Paper under the fixed header, shelf below — no hard seam at the top. */
-  background: linear-gradient(
-    to bottom,
-    var(--paper) 0,
-    var(--paper) var(--notes-header-offset),
-    var(--notes-shelf) var(--notes-header-offset),
-    var(--notes-shelf) 100%
-  );
-}
-
-/* main’s shelf background extends under the fixed header; paint paper on the bar. */
-.site-shell--notes .site-header {
+  padding-block: 4.5rem 4rem;
   background-color: var(--paper);
-  /* Notes Fraunces is for content — header chrome matches the rest of the site. */
-  --font-display: 'DM Serif Display', serif;
-  --font-body: 'IBM Plex Sans', sans-serif;
-  font-family: var(--font-body);
-  font-variation-settings: normal;
-  font-optical-sizing: auto;
 }
 
-.site-shell--notes .site-header__monogram {
-  font-family: var(--font-display);
-}
-
-/* Paper sheet resting on the shelf */
+/* Paper sheet resting on the page */
 .notes-reader.archive .archive__page,
 .notes-reader.post-layout .post-layout__page {
   background-color: var(--paper);
   border: 1px solid var(--rule);
   border-radius: 2px;
   box-shadow: var(--page-shadow);
-  font-family: var(--font-body);
 }
 
 .notes-reader .archive__title,
 .notes-reader.post-layout .post-layout__header h1 {
   font-family: var(--font-display);
-  font-weight: 600;
-  font-variation-settings: var(--fraunces-opsz-48);
-  letter-spacing: -0.02em;
+  font-weight: 400;
+  letter-spacing: var(--tracking-display);
+  color: var(--ink);
 }
 
 .notes-reader .archive__dek {
   max-width: 42rem;
 }
 
-.notes-reader .archive__dek,
 .notes-reader .archive__count,
-.notes-reader .archive__meta,
 .notes-reader .archive__entry-dek {
-  font-family: inherit;
+  font-family: var(--font-body);
+  color: var(--ink-mute);
 }
+
 
 .notes-reader .archive__kind,
 .notes-reader .post-layout__kind {
-  font-weight: 500;
   color: var(--ink-mute);
 }
 
@@ -320,18 +292,21 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.45rem;
-  font-size: var(--type-body-s);
+  font-family: var(--font-mono);
+  font-size: var(--type-meta);
+  letter-spacing: var(--tracking-meta);
+  text-transform: uppercase;
   color: var(--ink-mute);
   font-variant-numeric: tabular-nums;
 }
 
 .notes-reader .archive__entry-title {
   margin: 0;
-  font-family: inherit;
-  font-weight: 600;
-  font-variation-settings: var(--fraunces-opsz-24);
+  font-family: var(--font-display);
+  font-weight: 400;
   font-size: clamp(1.1rem, 0.8vw + 0.95rem, 1.35rem);
   line-height: var(--leading-snug);
+  letter-spacing: var(--tracking-tight);
   color: var(--ink);
   transition: color 160ms ease;
 }
@@ -455,8 +430,7 @@
 
 @media (max-width: 768px) {
   .site-main-notes {
-    --notes-header-offset: 4rem;
-    padding-block: var(--notes-header-offset) 3rem;
+    padding-block: 4rem 3rem;
   }
 
   .notes-reader .archive__link {

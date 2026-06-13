@@ -16,8 +16,7 @@ export default function AppShell() {
     applyPageMeta(getPageMeta(location.pathname))
   }, [location.pathname])
 
-  const shellClass =
-    section === 'notes' ? 'site-shell site-shell--notes' : 'site-shell'
+  const shellClass = 'site-shell'
 
   return (
     <ThemeProvider>

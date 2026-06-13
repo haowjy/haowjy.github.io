@@ -4,7 +4,6 @@
 @import './tokens/surfaces.css';
 @import './tokens/charts.css';
 @import './tokens/layout.css';
-@import './tokens/notes.css';
 @import './tokens/tailwind.css';
 
 * {

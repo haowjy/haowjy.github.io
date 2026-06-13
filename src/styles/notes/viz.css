@@ -229,10 +229,9 @@
 .notes-reader .note-prose .viz-workspace-cache__title {
   margin: 0;
   font-family: var(--font-display);
-  font-weight: 600;
+  font-weight: 400;
   font-size: clamp(1.35rem, 2vw, 1.65rem);
   line-height: var(--leading-snug);
-  font-variation-settings: var(--fraunces-opsz-32);
   color: var(--ink);
 }
 

@@ -19,10 +19,7 @@ function readCssVar(name: string, fallback: string): string {
 }
 
 export function readPlotFontFamily(): string {
-  return readCssVar(
-    '--font-notes',
-    "'Fraunces Variable', 'Fraunces', Georgia, serif",
-  )
+  return readCssVar('--font-body', "'IBM Plex Sans', sans-serif")
 }
 
 export function readPlotColors(): PlotColors {

@@ -12,7 +12,6 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@fontsource-variable/fraunces": "^5.2.9",
     "@fontsource-variable/jetbrains-mono": "^5.2.8",
     "@fontsource/dm-serif-display": "^5.2.8",
     "@fontsource/ibm-plex-sans": "^5.2.8",

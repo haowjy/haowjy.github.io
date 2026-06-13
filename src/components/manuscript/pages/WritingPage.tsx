@@ -19,7 +19,7 @@ export default function WritingPage({ posts }: Props) {
           className="m-0 font-display font-normal leading-tight tracking-display text-ink"
           style={{ fontSize: 'clamp(2rem, 2.5vw + 1rem, 3.25rem)' }}
         >
-          Writing
+          Notes
         </h2>
         <Link
           to="/notes"
