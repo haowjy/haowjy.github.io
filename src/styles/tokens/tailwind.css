@@ -1,0 +1,55 @@
+@import 'tailwindcss';
+
+@theme inline {
+  /* Wipe only the namespaces where Tailwind's defaults would conflict
+     with our design language (colors and fonts). Keep spacing, breakpoints,
+     radii, etc. so the standard utilities work as expected. */
+  --color-*: initial;
+  --font-*: initial;
+
+  --color-paper: var(--paper);
+  --color-paper-edge: var(--paper-edge);
+  --color-paper-deep: var(--paper-deep);
+  --color-paper-veil: var(--paper-veil);
+
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-mute: var(--ink-mute);
+  --color-ink-fade: var(--ink-fade);
+
+  --color-jade: var(--jade);
+  --color-jade-deep: var(--jade-deep);
+  --color-jade-bright: var(--jade-bright);
+  --color-jade-soft: var(--jade-soft);
+  --color-jade-veil: var(--jade-veil);
+
+  --color-amber: var(--amber);
+  --color-amber-deep: var(--amber-deep);
+
+  --color-rule: var(--rule);
+  --color-rule-strong: var(--rule-strong);
+
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
+  --font-mono: var(--font-mono);
+
+  --text-display-xxl: var(--type-display-xxl);
+  --text-display-xl: var(--type-display-xl);
+  --text-display-l: var(--type-display-l);
+  --text-display-m: var(--type-display-m);
+  --text-h2: var(--type-h2);
+  --text-h3: var(--type-h3);
+  --text-body: var(--type-body);
+  --text-body-s: var(--type-body-s);
+  --text-meta: var(--type-meta);
+  --text-micro: var(--type-micro);
+
+  --leading-tight: var(--leading-tight);
+  --leading-snug: var(--leading-snug);
+  --leading-body: var(--leading-body);
+  --leading-loose: var(--leading-loose);
+
+  --tracking-display: var(--tracking-display);
+  --tracking-tight: var(--tracking-tight);
+  --tracking-meta: var(--tracking-meta);
+}

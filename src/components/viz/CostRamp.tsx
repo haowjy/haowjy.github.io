@@ -1,4 +1,7 @@
 import type { ReactNode } from 'react'
+import * as Plot from '@observablehq/plot'
+import { readPlotColors, readPlotFontFamily } from './plotTheme'
+import { usePlot } from './usePlot'
 
 type CostRampPoint = {
   period: string
@@ -17,28 +20,64 @@ const numberFormatter = new Intl.NumberFormat('en-US', {
 })
 
 export function CostRamp({ data, peak, caption }: CostRampProps) {
-  const max = Math.max(...data.map((entry) => entry.value), 0)
+  const plotRef = usePlot(() => {
+    const colors = readPlotColors()
+    const enriched = data.map((entry) => ({
+      ...entry,
+      xLabel: entry.label ?? entry.period,
+      fill: entry.period === peak ? colors.fillPeak : colors.fill,
+      valueLabel: `$${numberFormatter.format(entry.value)}`,
+    }))
+
+    return {
+      width: Math.max(420, data.length * 56),
+      height: 220,
+      marginLeft: 8,
+      marginRight: 8,
+      marginTop: 28,
+      marginBottom: 36,
+      x: {
+        domain: enriched.map((entry) => entry.xLabel),
+        label: null,
+        tickSize: 0,
+        tickPadding: 10,
+      },
+      y: {
+        grid: false,
+        label: null,
+        axis: null,
+      },
+      style: {
+        fontFamily: readPlotFontFamily(),
+        fontSize: '11px',
+        color: colors.inkMute,
+      },
+      marks: [
+        Plot.ruleY([0], { stroke: colors.inkFade, strokeOpacity: 0.35 }),
+        Plot.barY(enriched, {
+          x: 'xLabel',
+          y: 'value',
+          fill: 'fill',
+          rx: 2,
+          inset: 4,
+        }),
+        Plot.text(enriched, {
+          x: 'xLabel',
+          y: 'value',
+          text: 'valueLabel',
+          dy: -8,
+          fill: colors.inkMute,
+          fontSize: '11px',
+          fontWeight: 500,
+        }),
+      ],
+    }
+  }, [data, peak])
 
   return (
     <figure className="viz-cost-ramp">
-      <div className="viz-cost-ramp__bars">
-        {data.map((entry) => {
-          const height = max > 0 ? (entry.value / max) * 100 : 0
-
-          return (
-            <div className="viz-cost-ramp__bar-wrap" key={entry.period}>
-              <span className="viz-cost-ramp__value">${numberFormatter.format(entry.value)}</span>
-              <div
-                className={`viz-cost-ramp__bar${entry.period === peak ? ' is-peak' : ''}`}
-                style={{ height: `${height}%` }}
-                aria-hidden="true"
-              />
-              <span className="viz-cost-ramp__period">{entry.label ?? entry.period}</span>
-            </div>
-          )
-        })}
-      </div>
-      {caption ? <figcaption>{caption}</figcaption> : null}
+      <div className="viz-plot" ref={plotRef} role="img" aria-label="Cost chart" />
+      {caption ? <figcaption className="viz-cost-ramp__caption">{caption}</figcaption> : null}
     </figure>
   )
 }

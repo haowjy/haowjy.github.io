@@ -19,7 +19,7 @@ export default function StarChip({ source }: Props) {
       title={`${stars.toLocaleString()} stars on GitHub`}
     >
       <svg
-        className="inline-block size-[0.95em] shrink-0 text-[#eac54f] mr-[0.25em] [vertical-align:-0.12em]"
+        className="inline-block size-[0.95em] shrink-0 text-[var(--gold)] mr-[0.25em] [vertical-align:-0.12em]"
         viewBox="0 0 16 16"
         version="1.1"
         aria-hidden="true"

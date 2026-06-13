@@ -1,0 +1,15 @@
+:root {
+  --chart-1: var(--jade);
+  --chart-2: var(--jade-soft);
+  --chart-peak: var(--amber);
+  --chart-mute: var(--ink-fade);
+  --chart-track: var(--paper-deep);
+}
+
+[data-theme='dark'] {
+  --chart-1: var(--jade);
+  --chart-2: var(--jade-bright);
+  --chart-peak: var(--amber);
+  --chart-mute: var(--ink-fade);
+  --chart-track: var(--paper-deep);
+}

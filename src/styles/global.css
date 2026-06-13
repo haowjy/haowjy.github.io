@@ -1,157 +1,11 @@
-@import 'tailwindcss';
-
-@import '@fontsource/dm-serif-display/400.css';
-@import '@fontsource-variable/jetbrains-mono';
-@import '@fontsource/ibm-plex-sans';
-@import '@fontsource/ibm-plex-sans/500.css';
-@import '@fontsource/ibm-plex-sans/400-italic.css';
-
-:root {
-  color-scheme: light;
-
-  --paper: #f2ebd8;
-  --paper-edge: #e9dfc6;
-  --paper-deep: #dccfb0;
-  --paper-veil: #f2ebd8c0;
-
-  --ink: #14110f;
-  --ink-soft: #2b2722;
-  --ink-mute: #6f6759;
-  --ink-fade: #a99f8a;
-
-  --jade: #1f665e;
-  --jade-deep: #143f3a;
-  --jade-bright: #2e8c82;
-  --jade-soft: #7db8b0;
-  --jade-veil: #1f665e14;
-
-  --amber: #b57823;
-  --amber-deep: #8a5916;
-
-  --chart-1: var(--jade);
-  --chart-2: var(--jade-soft);
-  --chart-peak: var(--amber);
-  --chart-mute: var(--ink-fade);
-  --chart-track: var(--paper-deep);
-
-  --rule: #14110f22;
-  --rule-strong: #14110f44;
-  --grain-opacity: 0.04;
-  --paper-noise: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.55 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
-  --shadow-soft: 0 1px 2px #14110f0f, 0 8px 24px #14110f0a;
-
-  --type-display-xxl: clamp(5rem, 12vw + 1rem, 14rem);
-  --type-display-xl: clamp(4rem, 8vw + 1rem, 9rem);
-  --type-display-l: clamp(3rem, 4.5vw + 1rem, 5rem);
-  --type-display-m: clamp(2rem, 2vw + 1rem, 2.75rem);
-  --type-h2: 1.5rem;
-  --type-h3: 1.125rem;
-  --type-body: 1.0625rem;
-  --type-body-s: 0.9375rem;
-  --type-meta: 0.8125rem;
-  --type-micro: 0.6875rem;
-
-  --leading-tight: 1.05;
-  --leading-snug: 1.25;
-  --leading-body: 1.55;
-  --leading-loose: 1.7;
-
-  --tracking-display: -0.025em;
-  --tracking-tight: -0.005em;
-  --tracking-meta: 0.12em;
-
-  --font-display: 'DM Serif Display', serif;
-  --font-body: 'IBM Plex Sans', sans-serif;
-  --font-mono: 'JetBrains Mono Variable', 'JetBrains Mono', monospace;
-}
-
-[data-theme='dark'] {
-  color-scheme: dark;
-
-  --paper: #0e0d0b;
-  --paper-edge: #161412;
-  --paper-deep: #1f1c18;
-  --paper-veil: #0e0d0bc0;
-
-  --ink: #ece3cd;
-  --ink-soft: #c8bfa9;
-  --ink-mute: #8c8472;
-  --ink-fade: #4a453b;
-
-  --jade: #5fb5ab;
-  --jade-deep: #3f8a82;
-  --jade-bright: #8dd4cb;
-  --jade-soft: #2e5f5a;
-  --jade-veil: #5fb5ab1a;
-
-  --amber: #e0a23e;
-  --amber-deep: #b8821f;
-
-  --chart-1: var(--jade);
-  --chart-2: var(--jade-bright);
-  --chart-peak: var(--amber);
-  --chart-mute: var(--ink-fade);
-  --chart-track: var(--paper-deep);
-
-  --rule: #ece3cd22;
-  --rule-strong: #ece3cd44;
-  --grain-opacity: 0.06;
-  --shadow-soft: 0 1px 2px #00000040, 0 8px 24px #00000030;
-}
-
-@theme inline {
-  /* Wipe only the namespaces where Tailwind's defaults would conflict
-     with our design language (colors and fonts). Keep spacing, breakpoints,
-     radii, etc. so the standard utilities work as expected. */
-  --color-*: initial;
-  --font-*: initial;
-
-  --color-paper: var(--paper);
-  --color-paper-edge: var(--paper-edge);
-  --color-paper-deep: var(--paper-deep);
-  --color-paper-veil: var(--paper-veil);
-
-  --color-ink: var(--ink);
-  --color-ink-soft: var(--ink-soft);
-  --color-ink-mute: var(--ink-mute);
-  --color-ink-fade: var(--ink-fade);
-
-  --color-jade: var(--jade);
-  --color-jade-deep: var(--jade-deep);
-  --color-jade-bright: var(--jade-bright);
-  --color-jade-soft: var(--jade-soft);
-  --color-jade-veil: var(--jade-veil);
-
-  --color-amber: var(--amber);
-  --color-amber-deep: var(--amber-deep);
-
-  --color-rule: var(--rule);
-  --color-rule-strong: var(--rule-strong);
-
-  --font-display: var(--font-display);
-  --font-body: var(--font-body);
-  --font-mono: var(--font-mono);
-
-  --text-display-xxl: var(--type-display-xxl);
-  --text-display-xl: var(--type-display-xl);
-  --text-display-l: var(--type-display-l);
-  --text-display-m: var(--type-display-m);
-  --text-h2: var(--type-h2);
-  --text-h3: var(--type-h3);
-  --text-body: var(--type-body);
-  --text-body-s: var(--type-body-s);
-  --text-meta: var(--type-meta);
-  --text-micro: var(--type-micro);
-
-  --leading-tight: var(--leading-tight);
-  --leading-snug: var(--leading-snug);
-  --leading-body: var(--leading-body);
-  --leading-loose: var(--leading-loose);
-
-  --tracking-display: var(--tracking-display);
-  --tracking-tight: var(--tracking-tight);
-  --tracking-meta: var(--tracking-meta);
-}
+@import './tokens/fonts.css';
+@import './tokens/colors.css';
+@import './tokens/typography.css';
+@import './tokens/surfaces.css';
+@import './tokens/charts.css';
+@import './tokens/layout.css';
+@import './tokens/notes.css';
+@import './tokens/tailwind.css';
 
 * {
   box-sizing: border-box;
@@ -184,7 +38,7 @@ a {
 
 .site-main {
   flex: 1;
-  width: min(1100px, 100% - 2.5rem);
+  width: min(var(--content-max), 100% - var(--gutter));
   margin: 0 auto;
   padding-block: 4.5rem 4.5rem;
 }
@@ -245,9 +99,9 @@ a {
 }
 
 .site-header__inner {
-  width: min(1100px, 100% - 2.5rem);
+  width: min(var(--content-max), 100% - var(--gutter));
   margin: 0 auto;
-  min-height: 4rem;
+  min-height: var(--header-height);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -450,7 +304,7 @@ a {
 }
 
 .site-footer {
-  width: min(1100px, 100% - 2.5rem);
+  width: min(var(--content-max), 100% - var(--gutter));
   margin: 0 auto;
   border-top: 1px solid var(--rule);
   padding: 3rem 0 3rem;
@@ -524,10 +378,14 @@ a {
 }
 
 @media (max-width: 900px) {
+  :root {
+    --gutter: 2rem;
+  }
+
   .site-main,
   .site-header__inner,
   .site-footer {
-    width: min(100% - 2rem, 900px);
+    width: min(100% - var(--gutter), var(--content-max));
   }
 }
 

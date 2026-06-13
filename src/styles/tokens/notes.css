@@ -1,0 +1,12 @@
+:root {
+  --notes-shelf: color-mix(in srgb, var(--paper-edge) 55%, var(--paper-deep));
+  --font-notes: 'Fraunces Variable', 'Fraunces', Georgia, serif;
+  --fraunces-soft: 'SOFT' 55, 'WONK' 0;
+  --fraunces-opsz-48: 'opsz' 48, 'SOFT' 55, 'WONK' 0;
+  --fraunces-opsz-32: 'opsz' 32, 'SOFT' 55, 'WONK' 0;
+  --fraunces-opsz-24: 'opsz' 24, 'SOFT' 55, 'WONK' 0;
+}
+
+[data-theme='dark'] {
+  --notes-shelf: color-mix(in srgb, var(--paper-deep) 70%, #000000);
+}

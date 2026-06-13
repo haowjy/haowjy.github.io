@@ -1,0 +1,267 @@
+/* Notes — reader mode on paper. Draft workspace at /blog. */
+
+.site-shell--notes {
+  --font-display: var(--font-notes);
+  --font-body: var(--font-notes);
+  font-family: var(--font-body);
+  font-optical-sizing: auto;
+  font-variation-settings: var(--fraunces-soft);
+}
+
+.site-main-notes {
+  --notes-header-offset: 4.5rem;
+  flex: 1;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding-block: var(--notes-header-offset) 4rem;
+  /* Paper under the fixed header, shelf below — no hard seam at the top. */
+  background: linear-gradient(
+    to bottom,
+    var(--paper) 0,
+    var(--paper) var(--notes-header-offset),
+    var(--notes-shelf) var(--notes-header-offset),
+    var(--notes-shelf) 100%
+  );
+}
+
+/* main’s shelf background extends under the fixed header; paint paper on the bar. */
+.site-shell--notes .site-header {
+  background-color: var(--paper);
+  /* Notes Fraunces is for content — header chrome matches the rest of the site. */
+  --font-display: 'DM Serif Display', serif;
+  --font-body: 'IBM Plex Sans', sans-serif;
+  font-family: var(--font-body);
+  font-variation-settings: normal;
+  font-optical-sizing: auto;
+}
+
+.site-shell--notes .site-header__monogram {
+  font-family: var(--font-display);
+}
+
+/* Paper sheet resting on the shelf */
+.notes-reader.archive .archive__page,
+.notes-reader.post-layout .post-layout__page {
+  background-color: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  box-shadow: var(--page-shadow);
+  font-family: var(--font-body);
+}
+
+.notes-reader .archive__title,
+.notes-reader.post-layout .post-layout__header h1 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-variation-settings: var(--fraunces-opsz-48);
+  letter-spacing: -0.02em;
+}
+
+.notes-reader .archive__dek {
+  max-width: 42rem;
+}
+
+.notes-reader .archive__dek,
+.notes-reader .archive__count,
+.notes-reader .archive__meta,
+.notes-reader .archive__entry-dek {
+  font-family: inherit;
+}
+
+.notes-reader .archive__kind,
+.notes-reader .post-layout__kind {
+  font-weight: 500;
+  color: var(--ink-mute);
+}
+
+/* ------------------------------------------------------------------ Archive list (ruled, single column) */
+.notes-reader .archive__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--rule-strong);
+}
+
+.notes-reader .archive__item + .archive__item {
+  border-top: 1px solid var(--rule);
+}
+
+.notes-reader .archive__link {
+  position: static;
+  display: flex;
+  align-items: flex-start;
+  gap: clamp(0.75rem, 2vw, 1.25rem);
+  margin-inline: 0;
+  padding: clamp(1rem, 2vw, 1.35rem) 0;
+  color: inherit;
+  text-decoration: none;
+  border-radius: 0;
+  background: transparent;
+  transition: color 160ms ease;
+}
+
+.notes-reader .archive__link:hover,
+.notes-reader .archive__link:focus-visible {
+  background: transparent;
+  outline: none;
+}
+
+.notes-reader .archive__item-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.notes-reader .archive__meta {
+  margin: 0 0 0.4rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  font-size: var(--type-body-s);
+  color: var(--ink-mute);
+  font-variant-numeric: tabular-nums;
+}
+
+.notes-reader .archive__entry-title {
+  margin: 0;
+  font-family: inherit;
+  font-weight: 600;
+  font-variation-settings: var(--fraunces-opsz-24);
+  font-size: clamp(1.1rem, 0.8vw + 0.95rem, 1.35rem);
+  line-height: var(--leading-snug);
+  color: var(--ink);
+  transition: color 160ms ease;
+}
+
+.notes-reader .archive__entry-dek {
+  margin: 0.45rem 0 0;
+  max-width: 58ch;
+  font-style: italic;
+  font-size: var(--type-body-s);
+  line-height: var(--leading-snug);
+  color: var(--ink-soft);
+}
+
+.notes-reader .archive__entry-arrow {
+  display: block;
+  flex-shrink: 0;
+  align-self: center;
+  width: auto;
+  height: auto;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  font-size: 1.125rem;
+  line-height: 1;
+  color: var(--ink-fade);
+  transition: transform 180ms ease, color 160ms ease;
+}
+
+.notes-reader .archive__entry-arrow svg {
+  display: block;
+  width: 1em;
+  height: 1em;
+}
+
+.notes-reader .archive__link:hover .archive__entry-title,
+.notes-reader .archive__link:focus-visible .archive__entry-title {
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--ink) 35%, transparent);
+  text-underline-offset: 0.15em;
+}
+
+[data-theme='dark'] .notes-reader .archive__link:hover .archive__entry-title,
+[data-theme='dark'] .notes-reader .archive__link:focus-visible .archive__entry-title {
+  color: var(--ink);
+}
+
+.notes-reader .archive__link:hover .archive__entry-arrow,
+.notes-reader .archive__link:focus-visible .archive__entry-arrow {
+  transform: translateX(3px);
+  color: var(--ink-mute);
+  background: transparent;
+  border-color: transparent;
+}
+
+.notes-reader .archive__draft-badge {
+  color: var(--amber);
+  font-style: italic;
+}
+
+/* Reader body — continuous column, no folio ornaments */
+.notes-reader.post-layout .note-prose h2::before {
+  content: none;
+}
+
+.notes-reader.post-layout .note-prose h2 {
+  display: block;
+}
+
+.notes-reader.post-layout .note-prose > p:first-of-type::first-letter,
+.notes-reader.post-layout .note-prose > h1:first-of-type + p::first-letter {
+  float: none;
+  margin: 0;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+  color: inherit;
+}
+
+.notes-reader.post-layout .post-layout__dek {
+  margin-top: 1rem;
+  padding: 0;
+  border: 0;
+  font-style: italic;
+}
+
+.notes-reader .post-layout__back {
+  gap: 0;
+  margin-bottom: 1.25rem;
+  color: var(--ink-mute);
+  font-size: var(--type-body-s);
+  text-decoration: none;
+}
+
+.notes-reader .post-layout__back-arrow {
+  display: none;
+}
+
+.notes-reader .post-layout__back-label {
+  background: none;
+  padding: 0;
+  font-family: inherit;
+  font-weight: inherit;
+  font-size: inherit;
+  letter-spacing: normal;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  text-decoration-color: color-mix(in srgb, var(--ink-mute) 55%, transparent);
+}
+
+.notes-reader .post-layout__back:hover .post-layout__back-label,
+.notes-reader .post-layout__back:focus-visible .post-layout__back-label {
+  color: var(--ink);
+  background-size: 0;
+}
+
+.notes-reader .post-layout__nav-index span:last-child {
+  display: none;
+}
+
+.notes-reader .post-layout__colophon {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .site-main-notes {
+    --notes-header-offset: 4rem;
+    padding-block: var(--notes-header-offset) 3rem;
+  }
+
+  .notes-reader .archive__link {
+    align-items: center;
+  }
+}

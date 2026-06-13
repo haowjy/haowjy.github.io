@@ -1,0 +1,21 @@
+:root {
+  --rule: #14110f22;
+  --rule-strong: #14110f44;
+  --grain-opacity: 0.04;
+  --paper-noise: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.55 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  --shadow-soft: 0 1px 2px #14110f0f, 0 8px 24px #14110f0a;
+  /* Multi-layer drop shadow tuned to fall mostly downward (paper on a surface). */
+  --page-shadow: 0 1px 0 rgba(20, 17, 15, 0.06),
+    0 16px 24px -12px rgba(20, 17, 15, 0.22),
+    0 56px 80px -40px rgba(20, 17, 15, 0.26);
+}
+
+[data-theme='dark'] {
+  --rule: #ece3cd22;
+  --rule-strong: #ece3cd44;
+  --grain-opacity: 0.06;
+  --shadow-soft: 0 1px 2px #00000040, 0 8px 24px #00000030;
+  --page-shadow: 0 1px 0 rgba(0, 0, 0, 0.5),
+    0 16px 24px -12px rgba(0, 0, 0, 0.65),
+    0 56px 80px -40px rgba(0, 0, 0, 0.6);
+}

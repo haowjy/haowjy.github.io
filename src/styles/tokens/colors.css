@@ -1,0 +1,47 @@
+:root {
+  color-scheme: light;
+
+  --paper: #f2ebd8;
+  --paper-edge: #e9dfc6;
+  --paper-deep: #dccfb0;
+  --paper-veil: #f2ebd8c0;
+
+  --ink: #14110f;
+  --ink-soft: #2b2722;
+  --ink-mute: #6f6759;
+  --ink-fade: #a99f8a;
+
+  --jade: #1f665e;
+  --jade-deep: #143f3a;
+  --jade-bright: #2e8c82;
+  --jade-soft: #7db8b0;
+  --jade-veil: #1f665e14;
+
+  --amber: #b57823;
+  --amber-deep: #8a5916;
+
+  --gold: #eac54f;
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  --paper: #0e0d0b;
+  --paper-edge: #161412;
+  --paper-deep: #1f1c18;
+  --paper-veil: #0e0d0bc0;
+
+  --ink: #ece3cd;
+  --ink-soft: #c8bfa9;
+  --ink-mute: #8c8472;
+  --ink-fade: #4a453b;
+
+  --jade: #5fb5ab;
+  --jade-deep: #3f8a82;
+  --jade-bright: #8dd4cb;
+  --jade-soft: #2e5f5a;
+  --jade-veil: #5fb5ab1a;
+
+  --amber: #e0a23e;
+  --amber-deep: #b8821f;
+}

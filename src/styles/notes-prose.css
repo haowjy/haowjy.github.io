@@ -1,0 +1,263 @@
+/* Notes prose — full GFM typography under .note-prose */
+
+.notes-reader .note-prose {
+  max-width: 68ch;
+  margin: 0 auto;
+  font-family: var(--font-body);
+  font-size: 1.125rem;
+  line-height: 1.65;
+  color: var(--ink);
+  font-variation-settings: var(--fraunces-soft);
+}
+
+.notes-reader .note-prose > * {
+  margin: 0;
+}
+
+.notes-reader .note-prose > * + * {
+  margin-top: 1.25rem;
+}
+
+/* Hide redundant MDX h1 that duplicates frontmatter title */
+.notes-reader .note-prose > h1:first-of-type {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* Headings */
+.notes-reader .note-prose h2,
+.notes-reader .note-prose h3,
+.notes-reader .note-prose h4 {
+  font-family: inherit;
+  font-weight: 600;
+  font-variation-settings: var(--fraunces-opsz-24);
+  line-height: var(--leading-snug);
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+
+.notes-reader .note-prose h2 {
+  margin-top: clamp(2.25rem, 4vw, 3rem);
+  font-size: clamp(1.55rem, 0.9vw + 1.1rem, 2rem);
+}
+
+.notes-reader .note-prose h3 {
+  margin-top: clamp(1.75rem, 3vw, 2.25rem);
+  font-size: clamp(1.2rem, 0.5vw + 1rem, 1.4rem);
+}
+
+.notes-reader .note-prose h4 {
+  margin-top: 1.5rem;
+  font-size: 1.05rem;
+}
+
+/* Links */
+.notes-reader .note-prose a {
+  color: var(--jade);
+  text-decoration-color: color-mix(in srgb, var(--jade) 60%, transparent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.25em;
+  transition: color 160ms ease, text-decoration-thickness 160ms ease;
+}
+
+.notes-reader .note-prose a:hover,
+.notes-reader .note-prose a:focus-visible {
+  color: var(--jade-deep);
+  text-decoration-color: var(--jade-deep);
+  text-decoration-thickness: 2px;
+}
+
+[data-theme='dark'] .notes-reader .note-prose a:hover,
+[data-theme='dark'] .notes-reader .note-prose a:focus-visible {
+  color: var(--jade-bright);
+  text-decoration-color: var(--jade-bright);
+}
+
+/* Blockquote */
+.notes-reader .note-prose blockquote {
+  margin: 1.5rem 0;
+  padding: 0.4rem 0 0.4rem 1.1rem;
+  border-left: 2px solid var(--rule-strong);
+  color: var(--ink-soft);
+  font-style: italic;
+}
+
+/* Lists */
+.notes-reader .note-prose ul,
+.notes-reader .note-prose ol {
+  padding-left: 1.35rem;
+}
+
+.notes-reader .note-prose li + li {
+  margin-top: 0.35rem;
+}
+
+.notes-reader .note-prose li > ul,
+.notes-reader .note-prose li > ol {
+  margin-top: 0.35rem;
+}
+
+.notes-reader .note-prose ul {
+  list-style-type: disc;
+}
+
+.notes-reader .note-prose ol {
+  list-style-type: decimal;
+}
+
+/* Task lists (GFM) */
+.notes-reader .note-prose ul.contains-task-list {
+  list-style: none;
+  padding-left: 0;
+}
+
+.notes-reader .note-prose li.task-list-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.notes-reader .note-prose li.task-list-item input[type='checkbox'] {
+  margin-top: 0.35rem;
+  accent-color: var(--jade);
+}
+
+/* Tables (GFM) */
+.notes-reader .note-prose table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--type-body-s);
+  line-height: 1.45;
+}
+
+.notes-reader .note-prose th,
+.notes-reader .note-prose td {
+  padding: 0.55rem 0.65rem;
+  border-bottom: 1px solid var(--rule);
+  text-align: left;
+  vertical-align: top;
+}
+
+.notes-reader .note-prose th {
+  font-weight: 500;
+  color: var(--ink-mute);
+  border-bottom-color: var(--rule-strong);
+}
+
+.notes-reader .note-prose tr:last-child td {
+  border-bottom: 0;
+}
+
+.notes-reader .note-prose .table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-block: 1.5rem;
+}
+
+/* Images */
+.notes-reader .note-prose img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 2px;
+}
+
+.notes-reader .note-prose figure {
+  margin: 1.5rem 0;
+}
+
+.notes-reader .note-prose figcaption {
+  margin-top: 0.5rem;
+  font-size: var(--type-body-s);
+  color: var(--ink-mute);
+  line-height: var(--leading-snug);
+}
+
+/* Inline code */
+.notes-reader .note-prose :not(pre) > code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  background-color: var(--paper-edge);
+  border: 1px solid var(--rule);
+  padding: 0.08rem 0.35rem;
+  border-radius: 2px;
+}
+
+/* Code blocks — base + Shiki (rehype-pretty-code) */
+.notes-reader .note-prose pre {
+  margin: 1.5rem 0;
+  padding: 1rem 1.1rem;
+  background-color: var(--paper-deep);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  overflow-x: auto;
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+.notes-reader .note-prose pre code {
+  font-family: var(--font-mono);
+  border: 0;
+  padding: 0;
+  background: transparent;
+  font-size: inherit;
+}
+
+.notes-reader .note-prose pre[data-theme] {
+  background-color: var(--paper-deep);
+  border-color: var(--rule);
+}
+
+.notes-reader .note-prose [data-rehype-pretty-code-figure] {
+  margin: 1.5rem 0;
+}
+
+.notes-reader .note-prose [data-rehype-pretty-code-figure] pre {
+  margin: 0;
+}
+
+.notes-reader .note-prose [data-line-numbers] {
+  counter-reset: line;
+}
+
+.notes-reader .note-prose [data-line-numbers] > .line::before {
+  counter-increment: line;
+  content: counter(line);
+  display: inline-block;
+  width: 1.5rem;
+  margin-right: 1rem;
+  text-align: right;
+  color: var(--ink-fade);
+  user-select: none;
+}
+
+/* Horizontal rule — simple, no ornament */
+.notes-reader .note-prose hr {
+  margin: clamp(2rem, 3vw, 2.75rem) 0;
+  border: 0;
+  border-top: 1px solid var(--rule-strong);
+}
+
+.notes-reader .note-prose hr::after {
+  content: none;
+}
+
+/* Strikethrough, emphasis */
+.notes-reader .note-prose del {
+  color: var(--ink-mute);
+}
+
+.notes-reader .note-prose strong {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+@media (max-width: 768px) {
+  .notes-reader .note-prose pre {
+    font-size: 0.82rem;
+    padding: 0.85rem 0.95rem;
+  }
+}
