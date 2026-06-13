@@ -20,6 +20,3 @@ function normalizePost(module: PostModule): Post {
 export const posts: Post[] = Object.entries(modules)
   .map(([, module]) => normalizePost(module))
   .sort((left, right) => right.date.localeCompare(left.date))
-
-/** Explicitly published notes (`draft: false` in frontmatter). */
-export const publishedPosts: Post[] = posts.filter((post) => !post.draft)

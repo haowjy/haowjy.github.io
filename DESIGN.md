@@ -31,8 +31,8 @@ Typography, rhythm, and the page mechanics do the work. No chrome on top.
   manuscript grows page by page as content is added. Resizing
   re-paginates live.
 - **Writing on home does not paginate.** Stays a curated cut (3-5 recent
-  posts) on a single page. `See all writing →` routes to `/blog`. The
-  archive lives at `/blog`; the homepage is the highlight reel.
+  posts) on a single page. `All notes →` routes to `/notes`. The
+  archive lives at `/notes`; the homepage is the highlight reel.
 - **Contents spine.** Persistent nav at the right edge (desktop) or
   bottom bar (mobile): page numbers, section labels, current page
   highlighted. Click an entry → fast-flip through intervening pages
