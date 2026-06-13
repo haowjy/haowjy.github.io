@@ -65,12 +65,6 @@ export default function PostLayout({ post, prev, next, children }: PostLayoutPro
                 <span>{post.readingTime} min read</span>
               </>
             )}
-            {post.draft && (
-              <>
-                <span aria-hidden="true">·</span>
-                <span className="post-layout__draft-badge">draft</span>
-              </>
-            )}
           </p>
 
           <h1>{post.title}</h1>

@@ -58,12 +58,6 @@
   font-variant-numeric: tabular-nums;
 }
 
-.notes-reader .post-layout__draft-badge,
-.notes-reader .archive__draft-badge {
-  color: var(--amber);
-  font-style: italic;
-}
-
 .notes-reader .post-layout__tags {
   display: flex;
   flex-wrap: wrap;
@@ -393,11 +387,6 @@
   color: var(--ink-mute);
   background: transparent;
   border-color: transparent;
-}
-
-.notes-reader .archive__draft-badge {
-  color: var(--amber);
-  font-style: italic;
 }
 
 /* Reader body — continuous column, no folio ornaments */

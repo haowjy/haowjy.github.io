@@ -10,11 +10,7 @@ export default function NotesIndexRoute() {
     <article className="archive notes-reader">
       <div className="archive__page paper-noise">
         <header className="archive__head">
-          <h1 className="archive__title">Notes</h1>
-          <p className="archive__dek">
-            Drafts and working papers — material that may ship on Substack or
-            elsewhere later.
-          </p>
+          <h1 className="archive__title">Drafts / notes — half-writing by AI</h1>
           <p className="archive__count">
             {posts.length}{' '}
             {posts.length === 1 ? 'note' : 'notes'}

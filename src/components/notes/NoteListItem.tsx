@@ -37,12 +37,6 @@ function NoteMeta({ post, variant }: { post: Post; variant: 'archive' | 'manuscr
           <span>{post.readingTime} min</span>
         </>
       )}
-      {post.draft && (
-        <>
-          <span aria-hidden="true">·</span>
-          <span className="archive__draft-badge">draft</span>
-        </>
-      )}
     </p>
   )
 }

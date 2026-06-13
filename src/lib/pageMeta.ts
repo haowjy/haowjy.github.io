@@ -1,11 +1,10 @@
-import { posts, publishedPosts } from '@/content/notes'
+import { posts } from '@/content/notes'
 import { author } from '@/content/site'
 
 const SITE_URL = 'https://haowjy.github.io'
 const SITE_TITLE = `${author.name} — ${author.role}`
 const DEFAULT_DESCRIPTION = author.focus
-const NOTES_DESCRIPTION =
-  'Drafts and working papers — material that may ship on Substack or elsewhere later.'
+const NOTES_DESCRIPTION = 'Drafts / notes — half-writing by AI.'
 
 export type PageMeta = {
   title: string
@@ -34,7 +33,7 @@ export function getPageMeta(pathname: string): PageMeta {
 
   if (normalizedPathname === '/notes') {
     return {
-      title: `Notes — ${author.name}`,
+      title: `Drafts / notes — ${author.name}`,
       description: NOTES_DESCRIPTION,
       canonicalUrl: toAbsoluteUrl('/notes'),
       ogType: 'website',
@@ -167,8 +166,5 @@ export function renderPageMetaTags(meta: PageMeta): string {
 }
 
 export function getNotesPrerenderRoutes(): string[] {
-  return [
-    '/notes',
-    ...publishedPosts.map((post) => `/notes/${post.slug}`),
-  ]
+  return ['/notes', ...posts.map((post) => `/notes/${post.slug}`)]
 }

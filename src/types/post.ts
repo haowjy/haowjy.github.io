@@ -24,6 +24,7 @@ export type PostFrontmatter = {
   /** Optional override; auto-computed from MDX content if absent. */
   readingTime?: number
   ogImage?: string
+  /** Defaults to true when omitted — notes are drafts until explicitly published. */
   draft?: boolean
   keyStat?: KeyStat
   pullQuote?: string

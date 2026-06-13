@@ -8,12 +8,18 @@ type PostModule = {
 
 const modules = import.meta.glob<PostModule>('./*.mdx', { eager: true })
 
-export const posts: Post[] = Object.entries(modules)
-  .map(([, module]) => ({
+/** Notes are draft-by-default; set `draft: false` when ready to treat as published. */
+function normalizePost(module: PostModule): Post {
+  return {
     ...module.frontmatter,
+    draft: module.frontmatter.draft !== false,
     Component: module.default,
-  }))
+  }
+}
+
+export const posts: Post[] = Object.entries(modules)
+  .map(([, module]) => normalizePost(module))
   .sort((left, right) => right.date.localeCompare(left.date))
 
-/** Non-draft posts — homepage teaser and production prerender only. */
+/** Explicitly published notes (`draft: false` in frontmatter). */
 export const publishedPosts: Post[] = posts.filter((post) => !post.draft)
