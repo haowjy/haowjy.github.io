@@ -80,7 +80,7 @@ export default function PostLayout({ post, prev, next, children }: PostLayoutPro
           )}
         </header>
 
-        <div className="post-layout__body note-prose">{children}</div>
+        <div className="note-prose">{children}</div>
 
         <footer className="post-layout__footer">
           <nav className="post-layout__nav" aria-label="Post navigation">

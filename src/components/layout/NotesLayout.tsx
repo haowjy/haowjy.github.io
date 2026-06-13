@@ -1,8 +1,5 @@
 import { Outlet } from 'react-router'
-import '@/styles/prose.css'
-import '@/styles/notes-reader.css'
-import '@/styles/notes-prose.css'
-import '@/styles/notes-viz.css'
+import '@/styles/notes/index.css'
 
 export default function NotesLayout() {
   return (
