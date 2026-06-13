@@ -13,7 +13,8 @@ import remarkSmartypants from 'remark-smartypants'
 
 export default defineConfig({
   server: {
-    allowedHosts: ['pop-os.tail852a76.ts.net'],
+    host: true,
+    allowedHosts: true,
   },
   plugins: [
     mdx({
