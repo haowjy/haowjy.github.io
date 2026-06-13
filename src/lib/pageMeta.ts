@@ -1,10 +1,11 @@
-import { posts } from '@/content/blog'
+import { posts, publishedPosts } from '@/content/blog'
 import { author } from '@/content/site'
 
 const SITE_URL = 'https://haowjy.github.io'
 const SITE_TITLE = `${author.name} — ${author.role}`
 const DEFAULT_DESCRIPTION = author.focus
-const BLOG_DESCRIPTION = 'Blog of ideas.'
+const NOTES_DESCRIPTION =
+  'Drafts and working papers — material that may ship on Substack or elsewhere later.'
 
 export type PageMeta = {
   title: string
@@ -33,8 +34,8 @@ export function getPageMeta(pathname: string): PageMeta {
 
   if (normalizedPathname === '/blog') {
     return {
-      title: `Blog — ${author.name}`,
-      description: BLOG_DESCRIPTION,
+      title: `Notes — ${author.name}`,
+      description: NOTES_DESCRIPTION,
       canonicalUrl: toAbsoluteUrl('/blog'),
       ogType: 'website',
     }
@@ -46,22 +47,13 @@ export function getPageMeta(pathname: string): PageMeta {
     if (post) {
       return {
         title: `${post.title} — ${author.name}`,
-        description: post.description || BLOG_DESCRIPTION,
+        description: post.description || NOTES_DESCRIPTION,
         canonicalUrl: toAbsoluteUrl(`/blog/${post.slug}`),
         ogType: 'article',
         publishedTime: post.date,
         tags: post.tags,
         imageUrl: post.ogImage ? toAbsoluteUrl(post.ogImage) : undefined,
       }
-    }
-  }
-
-  if (normalizedPathname === '/projects') {
-    return {
-      title: `Projects — ${author.name}`,
-      description: DEFAULT_DESCRIPTION,
-      canonicalUrl: toAbsoluteUrl('/projects'),
-      ogType: 'website',
     }
   }
 
@@ -175,5 +167,8 @@ export function renderPageMetaTags(meta: PageMeta): string {
 }
 
 export function getBlogPrerenderRoutes(): string[] {
-  return ['/blog', ...posts.map((post) => `/blog/${post.slug}`)]
+  return [
+    '/blog',
+    ...publishedPosts.map((post) => `/blog/${post.slug}`),
+  ]
 }

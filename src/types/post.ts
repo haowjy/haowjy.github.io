@@ -1,7 +1,7 @@
 import type { ComponentType } from 'react'
 
 // MDX-rendered React components accept a `components` map so we can override
-// elements / inject custom blocks (StatHero, BarChart, etc.) per page.
+// elements / inject custom blocks (FigureLead, BarChart, etc.) per page.
 // The components map is heterogeneous by design (each entry has its own props
 // shape), and there's no useful narrower type — `any` is the conventional MDX shape.
 export type MDXComponentProps = {

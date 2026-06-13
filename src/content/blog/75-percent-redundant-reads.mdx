@@ -8,7 +8,7 @@ ogImage: "/og/default.png"
 draft: true
 ---
 
-import { StatHero, ComparisonBlock, BarChart, DataTable, Callout, WorkspaceCacheDiagram } from '@/components/viz'
+import { FigureLead, ComparisonBlock, BarChart, DataTable, Callout, WorkspaceCacheDiagram } from '@/components/viz'
 
 # 75% of LLM Reads Are Redundant
 
@@ -22,7 +22,7 @@ I wrote a script that pulls tool-call history from every session across all thre
 
 The dataset covers 4,339 sessions from February through May 2026, across a dozen models, three harnesses, and 30+ agent roles.
 
-<StatHero value="75.1%" label="of file reads were redundant" detail="50,319 of 67,017 reads across 4,339 sessions" />
+<FigureLead value="75.1%" label="of file reads were redundant" detail="50,319 of 67,017 reads across 4,339 sessions" />
 
 Three out of four file reads were repeats. In a single agent session, the agent would read a file, keep working, then read that same file again later.
 

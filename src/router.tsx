@@ -3,7 +3,6 @@ import App from '@/App'
 import BlogPostRoute from '@/routes/blog.$slug'
 import BlogRoute from '@/routes/blog'
 import HomeRoute from '@/routes/index'
-import ProjectsRoute from '@/routes/projects'
 
 export const appRoutes: RouteObject[] = [
   {
@@ -21,10 +20,6 @@ export const appRoutes: RouteObject[] = [
       {
         path: 'blog/:slug',
         Component: BlogPostRoute,
-      },
-      {
-        path: 'projects',
-        Component: ProjectsRoute,
       },
     ],
   },

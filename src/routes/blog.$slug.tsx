@@ -7,13 +7,13 @@ import {
   ComparisonBlock,
   CostRamp,
   DataTable,
-  StatHero,
+  FigureLead,
   WorkspaceCacheDiagram,
 } from '@/components/viz'
 import { posts } from '@/content/blog'
 
 const mdxComponents = {
-  StatHero,
+  FigureLead,
   BarChart,
   ComparisonBlock,
   DataTable,
@@ -43,7 +43,7 @@ export default function WritingPostRoute() {
 
   if (!ctx) {
     return (
-      <article className="post-layout">
+      <article className="post-layout notes-reader">
         <div className="post-layout__page paper-noise">
           <header className="post-layout__header">
             <Link to="/blog" className="post-layout__back">
@@ -61,17 +61,16 @@ export default function WritingPostRoute() {
                   <path d="M13 8H3M7 4 3 8l4 4" />
                 </svg>
               </span>
-              <span className="post-layout__back-label">Blog</span>
+              <span className="post-layout__back-label">← Notes</span>
             </Link>
-            <h1>Not in the archive</h1>
+            <h1>Not found</h1>
             <p className="post-layout__dek">
-              The page you asked for isn’t in the archive.
+              That note isn’t in the archive.
             </p>
           </header>
           <footer className="post-layout__footer">
             <Link to="/blog" className="post-layout__nav-index">
-              <span className="post-layout__nav-label">the archive</span>
-              <span aria-hidden="true">✦</span>
+              <span className="post-layout__nav-label">All notes</span>
             </Link>
           </footer>
         </div>

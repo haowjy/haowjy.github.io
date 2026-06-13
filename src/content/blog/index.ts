@@ -42,3 +42,6 @@ export const posts: Post[] = Object.entries(modules)
     Component: module.default,
   }))
   .sort((left, right) => right.date.localeCompare(left.date))
+
+/** Posts visible on the archive index and in prerender output. */
+export const publishedPosts: Post[] = posts.filter((post) => !post.draft)

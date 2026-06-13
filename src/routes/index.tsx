@@ -14,7 +14,7 @@ import ResumeListBlock, {
   type ResumeBlock,
 } from '@/components/manuscript/pages/ResumeListBlock'
 import WritingPage from '@/components/manuscript/pages/WritingPage'
-import { posts } from '@/content/blog'
+import { publishedPosts } from '@/content/blog'
 import { projects } from '@/content/projects'
 import {
   education,
@@ -235,14 +235,14 @@ export default function HomeRoute() {
     })
 
     // Writing — single page, curated 3-5 recent (section folio "V")
-    if (posts.length > 0) {
+    if (publishedPosts.length > 0) {
       out.push({
         id: 'writing',
         label: 'Writing',
         folio: SECTION_FOLIOS.writing,
         footerLabel: 'Writing',
         isSectionStart: true,
-        content: <WritingPage posts={posts.slice(0, 5)} />,
+        content: <WritingPage posts={publishedPosts.slice(0, 5)} />,
       })
     }
 
