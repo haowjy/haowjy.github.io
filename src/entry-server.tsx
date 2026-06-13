@@ -1,6 +1,6 @@
 import { renderToString } from 'react-dom/server'
 import { createMemoryRouter, RouterProvider } from 'react-router'
-import { renderPageMetaTags, getBlogPrerenderRoutes, getPageMeta } from '@/lib/pageMeta'
+import { renderPageMetaTags, getNotesPrerenderRoutes, getPageMeta } from '@/lib/pageMeta'
 import { appRoutes } from '@/router'
 
 export function renderPage(pathname: string) {
@@ -17,4 +17,4 @@ export function renderPage(pathname: string) {
   }
 }
 
-export { getBlogPrerenderRoutes }
+export { getNotesPrerenderRoutes }

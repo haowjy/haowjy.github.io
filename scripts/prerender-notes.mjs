@@ -9,11 +9,11 @@ const templatePath = path.join(distDir, 'index.html')
 const serverEntryPath = path.join(ssrDistDir, 'entry-server.js')
 
 const template = readFileSync(templatePath, 'utf8')
-const { getBlogPrerenderRoutes, renderPage } = await import(
+const { getNotesPrerenderRoutes, renderPage } = await import(
   pathToFileURL(serverEntryPath).href
 )
 
-for (const route of getBlogPrerenderRoutes()) {
+for (const route of getNotesPrerenderRoutes()) {
   const { appHtml, headTags } = renderPage(route)
   const pageHtml = injectPage(template, appHtml, headTags)
   const outputPath = toOutputPath(route)

@@ -21,10 +21,10 @@ export default function WritingPage({ posts }: Props) {
           Writing
         </h2>
         <Link
-          to="/blog"
+          to="/notes"
           className="font-mono text-meta tracking-meta uppercase text-jade underline underline-offset-[0.35em] hover:text-jade-deep transition-colors"
         >
-          See all writing →
+          All notes →
         </Link>
       </header>
 
@@ -42,7 +42,7 @@ export default function WritingPage({ posts }: Props) {
               }
             >
               <Link
-                to={`/blog/${p.slug}`}
+                to={`/notes/${p.slug}`}
                 className="group block no-underline text-ink"
               >
                 <div className="font-mono text-[0.7rem] tracking-meta uppercase text-ink-mute flex flex-wrap gap-x-2 gap-y-0.5">

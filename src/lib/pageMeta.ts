@@ -1,4 +1,4 @@
-import { posts, publishedPosts } from '@/content/blog'
+import { posts, publishedPosts } from '@/content/notes'
 import { author } from '@/content/site'
 
 const SITE_URL = 'https://haowjy.github.io'
@@ -32,23 +32,23 @@ function toAbsoluteUrl(pathname: string): string {
 export function getPageMeta(pathname: string): PageMeta {
   const normalizedPathname = normalizePathname(pathname)
 
-  if (normalizedPathname === '/blog') {
+  if (normalizedPathname === '/notes') {
     return {
       title: `Notes — ${author.name}`,
       description: NOTES_DESCRIPTION,
-      canonicalUrl: toAbsoluteUrl('/blog'),
+      canonicalUrl: toAbsoluteUrl('/notes'),
       ogType: 'website',
     }
   }
 
-  if (normalizedPathname.startsWith('/blog/')) {
-    const slug = normalizedPathname.slice('/blog/'.length)
+  if (normalizedPathname.startsWith('/notes/')) {
+    const slug = normalizedPathname.slice('/notes/'.length)
     const post = posts.find((entry) => entry.slug === slug)
     if (post) {
       return {
         title: `${post.title} — ${author.name}`,
         description: post.description || NOTES_DESCRIPTION,
-        canonicalUrl: toAbsoluteUrl(`/blog/${post.slug}`),
+        canonicalUrl: toAbsoluteUrl(`/notes/${post.slug}`),
         ogType: 'article',
         publishedTime: post.date,
         tags: post.tags,
@@ -166,9 +166,9 @@ export function renderPageMetaTags(meta: PageMeta): string {
   return tags.join('\n    ')
 }
 
-export function getBlogPrerenderRoutes(): string[] {
+export function getNotesPrerenderRoutes(): string[] {
   return [
-    '/blog',
-    ...publishedPosts.map((post) => `/blog/${post.slug}`),
+    '/notes',
+    ...publishedPosts.map((post) => `/notes/${post.slug}`),
   ]
 }

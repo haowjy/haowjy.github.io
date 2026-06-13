@@ -8,9 +8,12 @@ type CalloutProps = PropsWithChildren<{
 }>
 
 export function Callout({ type = 'note', eyebrow, children }: CalloutProps) {
+  const showEyebrow = eyebrow != null && eyebrow !== ''
   return (
     <aside className={`viz-callout viz-callout--${type}`}>
-      <p className="viz-callout__eyebrow">{eyebrow ?? type.toUpperCase()}</p>
+      {showEyebrow ? (
+        <p className="viz-callout__eyebrow">{eyebrow}</p>
+      ) : null}
       <div className="viz-callout__content">{children}</div>
     </aside>
   )

@@ -2,17 +2,15 @@
 title: "Layered Latent Memory Grafts"
 slug: "layered-latent-memory-grafts"
 date: "2026-05-24"
+draft: true
 tags: ["AI", "LLMs", "Memory", "Research"]
 description: "A research proposal and experimental roadmap for trainable memory systems that dream over new corpora, update fuzzy latent state, and practice correct retrieval instead of trying to memorize everything in one model."
 pullQuote: "The research goal is not a model that remembers every fact. It is a model that can sleep on experience, reorganize what it knows, and wake up better at retrieving, revising, and reasoning with memory."
 ---
 
-<StatHero
-  value="roadmap"
-  label="A staged research program for LLM memory: measure explicit retrieval first, use LoRA as a scaffold, then test whether routing, time, and plasticity belong in latent space."
-  detail="The long-term target is offline replay over conversations, documents, tool traces, and corrections. The first slice is a TemporalWiki RAG floor; protocol QLoRA and rank-matched adapter comparisons come next."
-  variant="peak"
-/>
+*A staged research program for LLM memory: measure explicit retrieval first, use LoRA as a scaffold, then test whether routing, time, and plasticity belong in latent space.*
+
+The long-term target is offline replay over conversations, documents, tool traces, and corrections. The first slice is a TemporalWiki RAG floor; protocol QLoRA and rank-matched adapter comparisons come next.
 
 <Callout type="insight" eyebrow="Thesis">
   Layered latent memory grafts are a proposed family of small trainable modules attached to a frozen language model. The program starts with explicit retrieval and treats LoRA as an experimental scaffold for protocol, temporal, and modular-update behavior—not as the presumed final memory substrate. Falsifiable alternatives include sparse memory finetuning, representation grafts (ReFT), and memory-as-model systems; fuzzy consolidation moves into latent space only when experiments beat simpler baselines. Exact evidence stays external.

@@ -14,7 +14,7 @@ import ResumeListBlock, {
   type ResumeBlock,
 } from '@/components/manuscript/pages/ResumeListBlock'
 import WritingPage from '@/components/manuscript/pages/WritingPage'
-import { publishedPosts } from '@/content/blog'
+import { publishedPosts } from '@/content/notes'
 import { projects } from '@/content/projects'
 import {
   education,

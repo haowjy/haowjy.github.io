@@ -1,5 +1,5 @@
 import { Link } from 'react-router'
-import { publishedPosts } from '@/content/blog'
+import { publishedPosts } from '@/content/notes'
 
 /**
  * Notes index — a ruled list on a paper sheet.
@@ -24,7 +24,7 @@ export default function WritingRoute() {
         <ol className="archive__list">
           {publishedPosts.map((post) => (
             <li key={post.slug} className="archive__item">
-              <Link to={`/blog/${post.slug}`} className="archive__link">
+              <Link to={`/notes/${post.slug}`} className="archive__link">
                 <div className="archive__item-main">
                   <p className="archive__meta">
                     <span className="archive__kind">Note</span>

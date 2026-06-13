@@ -1,8 +1,15 @@
-import type { RouteObject } from 'react-router'
+import { Navigate, useLocation, type RouteObject } from 'react-router'
 import App from '@/App'
-import BlogPostRoute from '@/routes/blog.$slug'
-import BlogRoute from '@/routes/blog'
 import HomeRoute from '@/routes/index'
+import NotesIndexRoute from '@/routes/notes'
+import NotesPostRoute from '@/routes/notes/$slug'
+
+function BlogRedirect() {
+  const location = useLocation()
+  const rest = location.pathname.replace(/^\/blog\/?/, '')
+  const target = rest ? `/notes/${rest}` : '/notes'
+  return <Navigate to={`${target}${location.search}${location.hash}`} replace />
+}
 
 export const appRoutes: RouteObject[] = [
   {
@@ -14,12 +21,20 @@ export const appRoutes: RouteObject[] = [
         Component: HomeRoute,
       },
       {
-        path: 'blog',
-        Component: BlogRoute,
+        path: 'notes',
+        Component: NotesIndexRoute,
       },
       {
-        path: 'blog/:slug',
-        Component: BlogPostRoute,
+        path: 'notes/:slug',
+        Component: NotesPostRoute,
+      },
+      {
+        path: 'blog',
+        Component: BlogRedirect,
+      },
+      {
+        path: 'blog/*',
+        Component: BlogRedirect,
       },
     ],
   },

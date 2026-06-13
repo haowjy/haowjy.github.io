@@ -30,19 +30,11 @@ type PostLayoutProps = PropsWithChildren<{
  */
 export default function PostLayout({ post, prev, next, children }: PostLayoutProps) {
   return (
-    <article className="post-layout">
+    <article className="post-layout notes-reader">
       <div className="post-layout__page paper-noise">
         <header className="post-layout__header">
-          {/* The "← Writing" return is rendered as its own row above the
-              dateline so it can carry visual weight (display-serif word,
-              jade arrow) instead of being swallowed by the mono eyebrow
-              rail. */}
-          <Link to="/blog" className="post-layout__back">
+          <Link to="/notes" className="post-layout__back">
             <span aria-hidden="true" className="post-layout__back-arrow">
-              {/* SVG arrow: unicode `←` is rendered off-centre inside
-                  the chip because the glyph's bounding box doesn't sit
-                  symmetrically around the arrowhead. An SVG is centred
-                  geometrically. */}
               <svg
                 viewBox="0 0 16 16"
                 width="1em"
@@ -56,17 +48,19 @@ export default function PostLayout({ post, prev, next, children }: PostLayoutPro
                 <path d="M13 8H3M7 4 3 8l4 4" />
               </svg>
             </span>
-            <span className="post-layout__back-label">Blog</span>
+            <span className="post-layout__back-label">← Notes</span>
           </Link>
 
           <p className="post-layout__eyebrow">
+            <span className="post-layout__kind">Note</span>
+            <span aria-hidden="true">·</span>
             <span>{post.date}</span>
             <span aria-hidden="true">·</span>
             <span>{post.readingTime} min read</span>
             {post.draft && (
               <>
                 <span aria-hidden="true">·</span>
-                <span className="post-layout__draft-badge">working notes</span>
+                <span className="post-layout__draft-badge">draft</span>
               </>
             )}
           </p>
@@ -86,13 +80,13 @@ export default function PostLayout({ post, prev, next, children }: PostLayoutPro
           )}
         </header>
 
-        <div className="post-layout__body">{children}</div>
+        <div className="post-layout__body note-prose">{children}</div>
 
         <footer className="post-layout__footer">
           <nav className="post-layout__nav" aria-label="Post navigation">
             {prev ? (
               <Link
-                to={`/blog/${prev.slug}`}
+                to={`/notes/${prev.slug}`}
                 className="post-layout__nav-link post-layout__nav-link--prev"
               >
                 <span className="post-layout__nav-arrow" aria-hidden="true">
@@ -112,14 +106,13 @@ export default function PostLayout({ post, prev, next, children }: PostLayoutPro
               </span>
             )}
 
-            <Link to="/blog" className="post-layout__nav-index">
-              <span className="post-layout__nav-label">the archive</span>
-              <span aria-hidden="true">✦</span>
+            <Link to="/notes" className="post-layout__nav-index">
+              <span className="post-layout__nav-label">All notes</span>
             </Link>
 
             {next ? (
               <Link
-                to={`/blog/${next.slug}`}
+                to={`/notes/${next.slug}`}
                 className="post-layout__nav-link post-layout__nav-link--next"
               >
                 <span className="post-layout__nav-stack">

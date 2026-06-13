@@ -16,7 +16,7 @@ import { FigureLead, ComparisonBlock, BarChart, DataTable, Callout, WorkspaceCac
 Dollar amounts for Codex sessions were inflated by a cost-estimation bug — the formula double-counted cache-read tokens. Compaction averages dropped from $24.56/$2.18 to $20.16/$1.13 in the corrected run. The $15,068 three-month total and weekly cost ramp in the companion post are similarly overstated; corrected figures there show ~$17,200 over a re-run of the broader dataset. Read counts, redundancy percentages, and all structural analysis are unaffected.
 </Callout>
 
-I've been running AI coding agents heavily since February: Claude Code, Codex, OpenCode, plus a [multi-agent orchestration engine](https://github.com/haowjy/meridian-cli) I built on top of all three. After a [particularly expensive overnight session](/blog/what-happened-to-my-tokens), I wanted to understand my usage at scale. Not just one bad spawn. Everything.
+I've been running AI coding agents heavily since February: Claude Code, Codex, OpenCode, plus a [multi-agent orchestration engine](https://github.com/haowjy/meridian-cli) I built on top of all three. After a [particularly expensive overnight session](/notes/what-happened-to-my-tokens), I wanted to understand my usage at scale. Not just one bad spawn. Everything.
 
 I wrote a script that pulls tool-call history from every session across all three harnesses. Claude Code stores sessions as JSONL. Codex has its own event format. OpenCode writes to SQLite. The script normalizes all three and extracts every file read: `Read` tool calls, `cat` and `sed` in bash, `grep` and `rg`. Then it tracks whether the agent had already seen that file earlier in the same session.
 
@@ -384,4 +384,4 @@ The point is to stop using message history as the source of truth for mutable fi
 
 ---
 
-*4,339 sessions across Claude Code, Codex, and OpenCode. February through May 2026. 12 models, 30+ agent roles. See [What Happened to My Tokens?](/blog/what-happened-to-my-tokens) for the case study that started this analysis.*
+*4,339 sessions across Claude Code, Codex, and OpenCode. February through May 2026. 12 models, 30+ agent roles. See [What Happened to My Tokens?](/notes/what-happened-to-my-tokens) for the case study that started this analysis.*

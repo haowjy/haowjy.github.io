@@ -15,6 +15,9 @@ export default function App() {
   // renders unconditionally so React state (scrolled, hover-expand) stays
   // alive when crossing between routes without a remount flash.
   const isManuscript = location.pathname === '/'
+  const isNotes =
+    location.pathname.startsWith('/notes') ||
+    location.pathname.startsWith('/blog')
   const isBrowser = typeof document !== 'undefined'
 
   useEffect(() => {
@@ -25,12 +28,20 @@ export default function App() {
     <ThemeProvider>
       {isBrowser && <ScrollRestoration />}
       <HashScroll />
-      <div className="site-shell">
+      <div className={`site-shell${isNotes ? ' site-shell--notes' : ''}`}>
         <Header isManuscript={isManuscript} />
-        <main className={isManuscript ? 'site-main-manuscript' : 'site-main'}>
+        <main
+          className={
+            isManuscript
+              ? 'site-main-manuscript'
+              : isNotes
+                ? 'site-main-notes'
+                : 'site-main'
+          }
+        >
           <Outlet />
         </main>
-        {!isManuscript && <Footer />}
+        {!isManuscript && !isNotes && <Footer />}
       </div>
     </ThemeProvider>
   )

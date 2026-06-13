@@ -31,12 +31,14 @@ export default function Header({ isManuscript = false }: Props) {
   const navigate = useNavigate()
   const reducedMotion = useReducedMotion()
 
-  const isBlog = location.pathname.startsWith('/blog')
+  const isNotes =
+    location.pathname.startsWith('/notes') ||
+    location.pathname.startsWith('/blog')
   // Section subnav (About · Projects · Resume · Writing) only belongs
   // under Portfolio. On blog routes the header sheds the second row /
   // hover-expanded sub-links, which also gives the paper more vertical
   // breathing room on mobile.
-  const showSectionLinks = !isBlog
+  const showSectionLinks = !isNotes
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40)
@@ -160,17 +162,17 @@ export default function Header({ isManuscript = false }: Props) {
 
               <Link
                 to="/"
-                className={`site-header__nav-link${!isBlog ? ' is-active' : ''}`}
+                className={`site-header__nav-link${!isNotes ? ' is-active' : ''}`}
               >
                 Portfolio
               </Link>
             </div>
 
             <Link
-              to="/blog"
-              className={`site-header__nav-link${isBlog ? ' is-active' : ''}`}
+              to="/notes"
+              className={`site-header__nav-link${isNotes ? ' is-active' : ''}`}
             >
-              Blog
+              Notes
             </Link>
           </nav>
 

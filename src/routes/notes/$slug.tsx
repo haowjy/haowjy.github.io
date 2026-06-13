@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { Link, useParams } from 'react-router'
-import PostLayout from '@/components/blog/PostLayout'
+import PostLayout from '@/components/notes/PostLayout'
 import {
   BarChart,
   Callout,
@@ -10,7 +10,7 @@ import {
   FigureLead,
   WorkspaceCacheDiagram,
 } from '@/components/viz'
-import { posts } from '@/content/blog'
+import { posts } from '@/content/notes'
 
 const mdxComponents = {
   FigureLead,
@@ -46,7 +46,7 @@ export default function WritingPostRoute() {
       <article className="post-layout notes-reader">
         <div className="post-layout__page paper-noise">
           <header className="post-layout__header">
-            <Link to="/blog" className="post-layout__back">
+            <Link to="/notes" className="post-layout__back">
               <span aria-hidden="true" className="post-layout__back-arrow">
                 <svg
                   viewBox="0 0 16 16"
@@ -69,7 +69,7 @@ export default function WritingPostRoute() {
             </p>
           </header>
           <footer className="post-layout__footer">
-            <Link to="/blog" className="post-layout__nav-index">
+            <Link to="/notes" className="post-layout__nav-index">
               <span className="post-layout__nav-label">All notes</span>
             </Link>
           </footer>
