@@ -15,5 +15,5 @@ export const posts: Post[] = Object.entries(modules)
   }))
   .sort((left, right) => right.date.localeCompare(left.date))
 
-/** Posts visible on the archive index and in prerender output. */
+/** Non-draft posts — homepage teaser and production prerender only. */
 export const publishedPosts: Post[] = posts.filter((post) => !post.draft)

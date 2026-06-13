@@ -1,4 +1,4 @@
-import { publishedPosts } from '@/content/notes'
+import { posts } from '@/content/notes'
 import NoteListItem from '@/components/notes/NoteListItem'
 
 /**
@@ -16,13 +16,13 @@ export default function NotesIndexRoute() {
             elsewhere later.
           </p>
           <p className="archive__count">
-            {publishedPosts.length}{' '}
-            {publishedPosts.length === 1 ? 'note' : 'notes'}
+            {posts.length}{' '}
+            {posts.length === 1 ? 'note' : 'notes'}
           </p>
         </header>
 
         <ol className="archive__list">
-          {publishedPosts.map((post) => (
+          {posts.map((post) => (
             <li key={post.slug} className="archive__item">
               <NoteListItem post={post} variant="archive" />
             </li>
