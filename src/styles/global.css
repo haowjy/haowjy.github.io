@@ -54,17 +54,6 @@ a {
   position: relative;
 }
 
-.site-theme-toggle-corner {
-  position: fixed;
-  top: 1rem;
-  right: 1.25rem;
-  z-index: 30;
-}
-
-.site-header__mobile-toggle {
-  display: none;
-}
-
 .site-header {
   position: fixed;
   top: 0;
@@ -81,12 +70,6 @@ a {
    experience. */
 @media (min-width: 761px) {
   .site-header--manuscript {
-    display: none;
-  }
-  /* The corner theme toggle is rendered as a Header sibling — hide it
-     too on desktop manuscript so the spine's toggle is the single
-     point of control. */
-  .site-theme-toggle-corner--manuscript {
     display: none;
   }
 }
@@ -119,6 +102,11 @@ a {
   display: flex;
   align-items: center;
   gap: 1.5rem;
+}
+
+.site-header__theme {
+  display: inline-flex;
+  flex-shrink: 0;
 }
 
 .site-header__portfolio-group {
@@ -177,7 +165,6 @@ a {
      `align-items: center` + `flex-wrap` only centers items within
      their own (shorter) flex line, so the subnav row visually
      "pushes up" the Portfolio/Blog row by a few pixels. */
-  .site-header__inner > .site-header__mobile-toggle,
   .site-header__inner > .site-header__monogram,
   .site-header__inner > .site-header__nav {
     min-height: calc(3.25rem - 0.7rem);
@@ -197,10 +184,8 @@ a {
        weight beyond the top row. The dot separators are short and the
        mono text reads fine with this tighter footer band. */
     padding-bottom: 0.25rem;
-    font-family: var(--font-mono);
+    font-family: var(--font-body);
     font-size: var(--type-meta);
-    letter-spacing: var(--tracking-meta);
-    text-transform: uppercase;
   }
 
   .site-header__mobile-subnav button {
@@ -225,15 +210,11 @@ a {
   }
 }
 
-/* Very narrow phones (≤ 380px): the row still won't always fit four mono
-   uppercase labels with separators on one line. Drop the dot separators
-   so labels wrap cleanly into 2 rows, tighten letter-spacing, and shrink
-   the type one notch so the row stays readable rather than crammed. */
+/* Very narrow phones (≤ 380px): drop dot separators so labels wrap cleanly. */
 @media (max-width: 380px) {
   .site-header__mobile-subnav {
     column-gap: 0.7rem;
     font-size: var(--type-micro);
-    letter-spacing: 0.08em;
   }
   .site-header__mobile-subnav .site-header__sub-dot {
     display: none;
@@ -338,10 +319,8 @@ a {
 }
 
 .site-footer__links a {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: var(--type-meta);
-  letter-spacing: var(--tracking-meta);
-  text-transform: uppercase;
   color: var(--ink-mute);
   text-decoration: none;
 }
@@ -352,10 +331,8 @@ a {
 }
 
 .theme-toggle {
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  letter-spacing: var(--tracking-meta);
-  text-transform: uppercase;
+  font-family: var(--font-body);
+  font-size: var(--type-meta);
   color: var(--ink-mute);
   border: 1px solid var(--rule);
   background: var(--paper-veil);
@@ -389,12 +366,6 @@ a {
 }
 
 @media (max-width: 760px) {
-  /* Hide the desktop top-right corner toggle; render the toggle inline
-     inside the header at the left, before the JY monogram. */
-  .site-theme-toggle-corner {
-    display: none;
-  }
-
   /* On mobile the two tabs sit in a tight row; matching the underline
      exactly to text width makes "Portfolio" (~59 px) read as a much
      heavier indicator than "Blog" (~31 px). A small horizontal padding
@@ -405,14 +376,10 @@ a {
     padding-inline: 0.5rem;
   }
   .site-header__nav {
-    gap: 0.25rem;
+    gap: 0.5rem;
   }
-  .site-header__mobile-toggle {
-    display: inline-flex;
-    margin-right: 0.5rem;
-  }
-  .site-header__mobile-toggle .theme-toggle {
+  .site-header__theme .theme-toggle {
     padding: 0.25rem 0.5rem;
-    font-size: 0.66rem;
+    font-size: var(--type-micro);
   }
 }

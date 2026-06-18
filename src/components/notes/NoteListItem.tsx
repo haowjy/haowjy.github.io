@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { Fragment, type ReactNode } from 'react'
 import { Link } from 'react-router'
 import type { Post } from '@/types/post'
 
@@ -8,36 +8,44 @@ type Props = {
 }
 
 function NoteMeta({ post, variant }: { post: Post; variant: 'archive' | 'manuscript' }) {
-  if (variant === 'manuscript') {
-    const date = new Date(post.date).toISOString().slice(0, 10)
-    const category = post.tags?.[0]?.toUpperCase() ?? 'ESSAY'
-    return (
-      <div className="font-mono text-[0.7rem] tracking-meta uppercase text-ink-mute flex flex-wrap gap-x-2 gap-y-0.5">
+  const date =
+    variant === 'manuscript'
+      ? new Date(post.date).toISOString().slice(0, 10)
+      : post.date
+
+  const metaClass =
+    variant === 'manuscript'
+      ? 'font-body text-meta text-ink-mute flex flex-wrap gap-x-2 gap-y-0.5 tabular-nums'
+      : 'archive__meta'
+
+  return (
+    <>
+      <p className={metaClass}>
         <span>{date}</span>
-        <span aria-hidden="true">·</span>
-        <span>{category}</span>
         {post.readingTime != null && (
           <>
             <span aria-hidden="true">·</span>
             <span>{post.readingTime} min</span>
           </>
         )}
-      </div>
-    )
-  }
-
-  return (
-    <p className="archive__meta">
-      <span className="archive__kind">Note</span>
-      <span aria-hidden="true">·</span>
-      <span>{post.date}</span>
-      {post.readingTime != null && (
-        <>
-          <span aria-hidden="true">·</span>
-          <span>{post.readingTime} min</span>
-        </>
+      </p>
+      {post.tags.length > 0 && (
+        <p
+          className={
+            variant === 'archive'
+              ? 'archive__tags'
+              : 'mt-1 font-body text-meta text-ink-fade'
+          }
+        >
+          {post.tags.map((tag, index) => (
+            <Fragment key={tag}>
+              {index > 0 && <span aria-hidden="true"> · </span>}
+              <span>{tag}</span>
+            </Fragment>
+          ))}
+        </p>
       )}
-    </p>
+    </>
   )
 }
 
@@ -65,7 +73,7 @@ function NoteDek({ post, variant }: { post: Post; variant: 'archive' | 'manuscri
 
   if (variant === 'manuscript') {
     return (
-      <p className="mt-1.5 mb-0 max-w-[60ch] text-body-s text-ink-soft line-clamp-2">
+      <p className="mt-1.5 mb-0 max-w-[60ch] text-body-s text-ink-soft line-clamp-1">
         {dek}
       </p>
     )

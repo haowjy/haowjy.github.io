@@ -15,7 +15,7 @@ export default function StarChip({ source }: Props) {
   if (source == null || stars == null) return null
   return (
     <span
-      className="font-mono text-[0.85rem] tabular-nums text-ink-mute whitespace-nowrap"
+      className="font-body text-meta tabular-nums text-ink-mute whitespace-nowrap"
       title={`${stars.toLocaleString()} stars on GitHub`}
     >
       <svg

@@ -1,6 +1,8 @@
 import type { PropsWithChildren } from 'react'
 import { Link } from 'react-router'
+import NoteToc from '@/components/notes/NoteToc'
 import TechBadge from '@/components/ui/TechBadge'
+import type { TocHeading } from '@/lib/noteHeadings'
 import type { PostFrontmatter } from '@/types/post'
 
 type Neighbor = {
@@ -10,6 +12,7 @@ type Neighbor = {
 
 type PostLayoutProps = PropsWithChildren<{
   post: PostFrontmatter
+  headings?: TocHeading[]
   /** Older post in chronological order (rendered as "previous"). */
   prev?: Neighbor
   /** Newer post in chronological order (rendered as "next"). */
@@ -28,7 +31,13 @@ type PostLayoutProps = PropsWithChildren<{
  *
  * The footer closes the page with prev/index/next nav plus a date colophon.
  */
-export default function PostLayout({ post, prev, next, children }: PostLayoutProps) {
+export default function PostLayout({
+  post,
+  headings = [],
+  prev,
+  next,
+  children,
+}: PostLayoutProps) {
   return (
     <article className="post-layout notes-reader">
       <div className="post-layout__page paper-noise">
@@ -52,16 +61,10 @@ export default function PostLayout({ post, prev, next, children }: PostLayoutPro
           </Link>
 
           <p className="post-layout__eyebrow">
-            <span className="post-layout__kind">Note</span>
-            {post.date && (
-              <>
-                <span aria-hidden="true">·</span>
-                <span>{post.date}</span>
-              </>
-            )}
+            {post.date && <span>{post.date}</span>}
             {post.readingTime != null && post.readingTime > 0 && (
               <>
-                <span aria-hidden="true">·</span>
+                {post.date && <span aria-hidden="true">·</span>}
                 <span>{post.readingTime} min read</span>
               </>
             )}
@@ -84,6 +87,8 @@ export default function PostLayout({ post, prev, next, children }: PostLayoutPro
           )}
         </header>
 
+        <NoteToc headings={headings} />
+
         <div className="note-prose">{children}</div>
 
         <footer className="post-layout__footer">
@@ -105,7 +110,6 @@ export default function PostLayout({ post, prev, next, children }: PostLayoutPro
               <span className="post-layout__nav-link post-layout__nav-link--empty">
                 <span className="post-layout__nav-stack">
                   <span className="post-layout__nav-label">previous</span>
-                  <span className="post-layout__nav-title">—</span>
                 </span>
               </span>
             )}
@@ -131,7 +135,6 @@ export default function PostLayout({ post, prev, next, children }: PostLayoutPro
               <span className="post-layout__nav-link post-layout__nav-link--empty">
                 <span className="post-layout__nav-stack">
                   <span className="post-layout__nav-label">next</span>
-                  <span className="post-layout__nav-title">—</span>
                 </span>
               </span>
             )}

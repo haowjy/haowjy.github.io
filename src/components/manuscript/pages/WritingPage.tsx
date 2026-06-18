@@ -7,8 +7,9 @@ type Props = {
 }
 
 /**
- * Curated cut of 3-5 recent posts. Single page; does not paginate per the
- * design spec — overflow is an editorial signal to cut, not a system signal.
+ * Curated teaser on the manuscript — show a couple recent notes in full.
+ * The fixed page can't scroll (wheel turns pages), so never clip mid-entry;
+ * link out to /notes for the full archive.
  */
 export default function WritingPage({ posts }: Props) {
   return (
@@ -23,17 +24,17 @@ export default function WritingPage({ posts }: Props) {
         </h2>
         <Link
           to="/notes"
-          className="font-mono text-meta tracking-meta uppercase text-jade underline underline-offset-[0.35em] hover:text-jade-deep transition-colors"
+          className="font-body text-meta text-jade underline underline-offset-[0.35em] hover:text-jade-deep transition-colors"
         >
           All notes →
         </Link>
       </header>
 
-      <ul className="list-none p-0 m-0 flex-1 min-h-0 overflow-hidden flex flex-col">
+      <ul className="list-none p-0 m-0 flex flex-col gap-0">
         {posts.map((p, i) => (
           <li
             key={p.slug}
-            className={i > 0 ? 'border-t border-rule pt-5 mt-5' : ''}
+            className={i > 0 ? 'border-t border-rule pt-4 mt-4' : ''}
           >
             <NoteListItem post={p} variant="manuscript" />
           </li>

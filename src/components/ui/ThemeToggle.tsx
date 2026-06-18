@@ -10,9 +10,9 @@ export default function ThemeToggle() {
       onClick={toggleTheme}
       aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} theme`}
     >
-      <span data-active={theme === 'light'}>LIGHT</span>
+      <span data-active={theme === 'light'}>Light</span>
       <span aria-hidden="true"> · </span>
-      <span data-active={theme === 'dark'}>DARK</span>
+      <span data-active={theme === 'dark'}>Dark</span>
     </button>
   )
 }

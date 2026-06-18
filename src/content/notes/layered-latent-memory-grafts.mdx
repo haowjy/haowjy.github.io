@@ -6,7 +6,6 @@ draft: true
 tags: ["AI", "LLMs", "Memory", "Research"]
 description: "A research proposal and experimental roadmap for trainable memory systems that dream over new corpora, update fuzzy latent state, and practice correct retrieval instead of trying to memorize everything in one model."
 pullQuote: "The research goal is not a model that remembers every fact. It is a model that can sleep on experience, reorganize what it knows, and wake up better at retrieving, revising, and reasoning with memory."
-readingTime: 37
 ---
 
 *A staged research program for LLM memory: measure explicit retrieval first, use LoRA as a scaffold, then test whether routing, time, and plasticity belong in latent space.*
@@ -46,267 +45,23 @@ The experimental program should not start with the full system. It begins with a
 
 ## 1. Literature map
 
-This proposal sits at the intersection of retrieval-augmented generation, tool-use training, parameter-efficient fine-tuning, model editing, routed adapters, mixture-of-experts, continual learning, temporal representation learning, meta-learning, and neuroscience-inspired consolidation.
+Retrieval-augmented generation keeps evidence external, inspectable, and citeable ([Lewis et al., 2020](https://arxiv.org/abs/2005.11401); [Guu et al., 2020](https://arxiv.org/abs/2002.08909); [Borgeaud et al., 2021](https://arxiv.org/abs/2112.04426)). That constraint is permanent here: latent modules may improve routing and fuzzy understanding, but provenance-heavy claims still come from the retriever, not from adapter weights.
 
-<DataTable
-  caption="The proposal is a synthesis of adjacent research threads, not a single technique."
-  columns={[
-    { key: 'thread', label: 'Thread' },
-    { key: 'contribution', label: 'Contribution' },
-    { key: 'gap', label: 'Open gap' },
-  ]}
-  rows={[
-    {
-      thread: 'RAG / REALM / RETRO',
-      contribution: 'External evidence, freshness, source grounding, non-parametric memory',
-      gap: 'Retrieval does not by itself create a fuzzy evolving model of the corpus',
-    },
-    {
-      thread: 'ReAct / Toolformer / Self-RAG / RAFT',
-      contribution: 'Learning when to retrieve, how to call tools, and how to use evidence',
-      gap: 'Usually framed as inference behavior, not memory consolidation over time',
-    },
-    {
-      thread: 'LoRA / QLoRA / PEFT',
-      contribution: 'Cheap modular updates around a frozen base model',
-      gap: 'Adapters can bury provenance, interfere, or become stale',
-    },
-    {
-      thread: 'ROME / MEMIT / SERAC / WISE',
-      contribution: 'Knowledge editing, side memory, and routing around updated facts',
-      gap: 'Many edits still create scope, locality, rollback, and lifelong-memory problems',
-    },
-    {
-      thread: 'ELDER / AM-LoRA / MiLoRA / SoLA',
-      contribution: 'Routed LoRA banks, semantic adapter activation, modular edit memories',
-      gap: 'Routing quality and interference remain central bottlenecks',
-    },
-    {
-      thread: 'Switch / GLaM / DeepSeekMoE',
-      contribution: 'Sparse experts, shared experts, latent routing, conditional computation',
-      gap: 'MoE adds training and serving confounds before the memory hypothesis is isolated',
-    },
-    {
-      thread: 'EWC / replay / progressive networks',
-      contribution: 'Stability-plasticity tools for continual learning',
-      gap: 'Not usually integrated with retrieval-grounded LLM memory systems',
-    },
-    {
-      thread: 'Time2Vec / temporal KGs / TemporalWiki',
-      contribution: 'Time as learned representation, evolving facts, temporal evaluation',
-      gap: 'Temporal representation is rarely connected to adapter plasticity and tool practice',
-    },
-    {
-      thread: 'CLS / replay / multi-timescale synapses',
-      contribution: 'Fast/slow memory, consolidation, replay, and multiple plasticities',
-      gap: 'Neuroscience provides design priors, not direct LLM module prescriptions',
-    },
-    {
-      thread: 'LoRA as knowledge memory (2026)',
-      contribution: 'LoRA studied as modular parametric memory alongside RAG and in-context learning',
-      gap: 'Capacity and composability on evolving corpora still need temporal agent eval',
-    },
-    {
-      thread: 'Sparse memory finetuning (2025)',
-      contribution: 'Slot-selective updates with much less forgetting than dense LoRA on continual tasks',
-      gap: 'Not yet paired with retrieval discipline and agent tool traces in this program',
-    },
-    {
-      thread: 'ReFT / CS-ReFT',
-      contribution: 'Hidden-state interventions; composable representation subspaces',
-      gap: 'Unclear vs protocol LoRA + RAG on supersession and as-of QA',
-    },
-    {
-      thread: 'MemoryAgentBench / MemGym (2025–26)',
-      contribution: 'Incremental multi-turn and long-horizon agent memory benchmarks',
-      gap: 'Custom harness still needed for project traces + citation discipline',
-    },
-  ]}
-/>
+Tool-use and open-book training teach when to retrieve, how to filter evidence, and when to defer ([Yao et al., 2022](https://arxiv.org/abs/2210.03629); [Schick et al., 2023](https://arxiv.org/abs/2302.04761); [Asai et al., 2023](https://arxiv.org/abs/2310.11511); [Zhang et al., 2024](https://arxiv.org/abs/2403.10131)). The first trainable artifact in this program is a **protocol LoRA**: an adapter fit on retrieval and tool traces (search, inspect, cite, defer), not on storing volatile facts.
 
-### 1.1 Explicit retrieval as memory
+LoRA freezes the base model and adds low-rank side paths `y = Wx + BAx` ([Hu et al., 2021](https://arxiv.org/abs/2106.09685); [Dettmers et al., 2023](https://arxiv.org/abs/2305.14314)). In this proposal LoRA is a cheap experimental scaffold—protocol, temporal, fast, and slow adapters can be stacked additively—not the presumed final memory substrate. Stacked LoRA must beat a **rank-matched single adapter** or show a clear modularity win before the stack grows. Recent work frames LoRA as modular parametric memory alongside RAG ([Understanding LoRA as Knowledge Memory](https://arxiv.org/abs/2603.01097)) and sparse slot-selective finetuning as an alternative with less catastrophic forgetting ([Sparse Memory Finetuning](https://arxiv.org/abs/2510.15103)). ReFT and CS-ReFT intervene on hidden states instead of weight deltas ([arXiv:2404.03592](https://arxiv.org/abs/2404.03592), [arXiv:2503.10617](https://arxiv.org/abs/2503.10617)); they are a natural test for temporal/source-scope grafts before committing to large adapter banks.
 
-Retrieval-augmented generation combines a parametric generator with non-parametric memory. RAG uses a retriever over external documents to improve knowledge-intensive generation while keeping evidence accessible ([Lewis et al., 2020](https://arxiv.org/abs/2005.11401)). REALM pretrains with a latent retriever and frames retrieval as a way to make knowledge access more modular and interpretable than pure parametric storage ([Guu et al., 2020](https://arxiv.org/abs/2002.08909)). RETRO scales retrieval-conditioned generation with a large external database, showing that explicit memory can substitute for some parameter count while retaining factual access ([Borgeaud et al., 2021](https://arxiv.org/abs/2112.04426)).
+Knowledge editing and side-memory systems (ROME, MEMIT, SERAC, WISE) probe where facts live in weights and when to route around edits ([Meng et al., 2022](https://arxiv.org/abs/2202.05262); [Mitchell et al., 2022](https://arxiv.org/abs/2206.06520); [Wang et al., 2024](https://arxiv.org/abs/2405.14768)). Routed LoRA banks (ELDER, AM-LoRA, MiLoRA, SoLA) extend that picture to corpus-specific adapters with semantic activation and rollback by deactivating modules ([Li et al., 2024](https://arxiv.org/abs/2408.11869); [Luo et al., 2026](https://arxiv.org/abs/2603.11239)). The router is its own hypothesis: composition alone does not guarantee good memory behavior.
 
-The retrieval literature supports one permanent design constraint for this proposal:
+MoE (Switch, GLaM, DeepSeekMoE) shows conditional computation can scale capacity ([Fedus et al., 2021](https://arxiv.org/abs/2101.03961); [Dai et al., 2024](https://arxiv.org/abs/2401.06066)). A dedicated memory expert belongs late in the program. Dense models with routed LoRA banks isolate the memory-routing question with fewer load-balancing and serving confounds.
 
-```text
-exact evidence should remain external, inspectable, updateable, and citeable
-```
+Temporal benchmarks—TemporalWiki, StreamingQA, PAT-Questions—evaluate acquisition, retention, and as-of correctness on evolving corpora ([Jang et al., 2022](https://arxiv.org/abs/2204.14211); [Liška et al., 2022](https://arxiv.org/abs/2205.11388); [Chen et al., 2024](https://arxiv.org/abs/2402.11034)). Phase 0 uses TemporalWiki because supersession shows up in retrieval metrics before any adapter is trained. Ordinary QA EM is insufficient: the harness must score stale-fact suppression, temporal recall@k, and source support together.
 
-A latent memory module can improve retrieval, routing, and fuzzy understanding. It should not replace source-grounded evidence for claims that require provenance.
+Continual-learning tools (EWC, progressive networks, replay) and multi-timescale neuroscience ([Kirkpatrick et al., 2016](https://arxiv.org/abs/1612.00796); [Blakeman and Mareschal, 2019](https://arxiv.org/abs/1905.02636)) motivate fast/slow channels and offline consolidation as design priors, not as proof that a LoRA layer maps to hippocampus. The engineering question is whether learned plasticity beats hand-defined fast/slow roles once supervision exists.
 
-### 1.2 Tool and retrieval behavior training
+Agent-memory benchmarks from 2025–26 (MemoryAgentBench, MemGym) push evaluation toward multi-turn tool use and long horizons ([arXiv:2507.05257](https://arxiv.org/abs/2507.05257); [arXiv:2605.20833](https://arxiv.org/abs/2605.20833)). This program still needs a custom harness for project traces and citation discipline—see experiment progress below. **MeMo** ([arXiv:2605.15156](https://arxiv.org/abs/2605.15156)) is a deliberate foil: it trains a separate memory model while keeping the base LLM frozen; grafts instead reshape memory behavior inside the base model’s computation while retrieval holds exact evidence.
 
-ReAct shows that reasoning and acting can be interleaved, allowing a model to inspect external sources while solving a task ([Yao et al., 2022](https://arxiv.org/abs/2210.03629)). Toolformer trains models to decide when to call APIs, what arguments to pass, and how to incorporate the result ([Schick et al., 2023](https://arxiv.org/abs/2302.04761)). Self-RAG trains adaptive retrieval and reflection behavior rather than retrieving blindly ([Asai et al., 2023](https://arxiv.org/abs/2310.11511)). RAFT fine-tunes models for domain-specific open-book QA with retrieved documents and distractors, teaching the model to use relevant evidence rather than memorize the corpus ([Zhang et al., 2024](https://arxiv.org/abs/2403.10131)).
-
-This thread motivates the first stable adapter:
-
-```text
-Protocol LoRA = a small adapter trained to practice correct retrieval, tool use, evidence filtering, citation, and deferral
-```
-
-This adapter should not store volatile facts. It should teach the base model a durable memory-use protocol.
-
-### 1.3 LoRA as a cheap memory experiment
-
-LoRA freezes the base model and adds trainable low-rank side paths to selected linear projections:
-
-```text
-y = W x + B A x
-```
-
-The original LoRA paper showed that low-rank updates can adapt large models with far fewer trainable parameters than full fine-tuning ([Hu et al., 2021](https://arxiv.org/abs/2106.09685)). QLoRA makes this practical on consumer hardware by training LoRA adapters through a frozen 4-bit quantized model ([Dettmers et al., 2023](https://arxiv.org/abs/2305.14314)).
-
-For this proposal, LoRA plays two roles. First, it is an experimental proxy for memory: fast and slow LoRAs can test whether different update speeds help. Second, it is a stable interface mechanism: protocol and temporal LoRAs can teach the model how to use memory even when the corpus-specific memory changes.
-
-LoRA is not a separate layer above the model. It is a trainable side-path inside the model's existing computations. Multiple LoRAs can be stacked additively:
-
-```text
-y = W x + ΔW_protocol x + ΔW_temporal x + ΔW_fast x + ΔW_slow x
-```
-
-Stacked LoRA remains an important falsifiable comparison—especially against a single rank-matched adapter—but recent work treats LoRA as a **scaffold** for protocol and temporal behavior, not necessarily the best substrate for continually updated fuzzy memory ([Understanding LoRA as Knowledge Memory](https://arxiv.org/abs/2603.01097); [Sparse Memory Finetuning](https://arxiv.org/abs/2510.15103)).
-
-### 1.4 Model editing and side memory
-
-ROME and MEMIT show that factual associations can sometimes be edited inside transformer weights ([Meng et al., 2022](https://arxiv.org/abs/2202.05262), [Meng et al., 2022](https://arxiv.org/abs/2210.07229)). These methods are valuable because they probe where factual associations live, but direct editing faces locality and generalization problems.
-
-SERAC uses an explicit edit memory and learns when to apply edits ([Mitchell et al., 2022](https://arxiv.org/abs/2206.06520)). WISE is especially relevant because it introduces a main memory, a side memory, and a router for lifelong model editing, arguing that pure parametric editing and pure retrieval both fail different parts of the reliability/locality/generalization tradeoff ([Wang et al., 2024](https://arxiv.org/abs/2405.14768)).
-
-This proposal inherits the side-memory view:
-
-```text
-base model = stable prior
-memory adapters / grafts = side memory
-router = learned control over memory paths
-retriever = exact evidence path
-```
-
-### 1.5 Routed LoRA, adapter banks, and latent experts
-
-ELDER uses multiple LoRAs plus routing for lifelong model editing, with a deferral route to preserve base ability ([Li et al., 2024](https://arxiv.org/abs/2408.11869)). AM-LoRA learns an attention mixture over LoRA modules for continual learning ([Liu et al., 2024](https://arxiv.org/abs/2409.19611)). MiLoRA routes among LoRA experts at prompt level to reduce generation-time overhead ([Zhang et al., 2024](https://arxiv.org/abs/2410.18035)). SoLA encapsulates edits as independent LoRA modules activated by semantic routing, enabling rollback by removing modules from routing ([Luo et al., 2026](https://arxiv.org/abs/2603.11239)).
-
-This literature makes a bank of corpus-specific LoRA memories plausible:
-
-```text
-base model
-  + stable behavior LoRA
-  + protocol LoRA
-  + temporal LoRA
-  + corpus memory LoRA A
-  + corpus memory LoRA B
-  + corpus memory LoRA C
-  + latent router
-```
-
-The router should be trained and evaluated separately. Adapter composition alone does not guarantee good memory behavior.
-
-### 1.6 MoE and the temptation to put everything in latent space
-
-Mixture-of-Experts models route tokens or sequences to sparse expert modules. Switch Transformers, GLaM, and DeepSeekMoE show that conditional computation can scale model capacity while activating only part of the model at inference ([Fedus et al., 2021](https://arxiv.org/abs/2101.03961), [Du et al., 2021](https://arxiv.org/abs/2112.06905), [Dai et al., 2024](https://arxiv.org/abs/2401.06066)).
-
-This work reflects a broader tendency in modern model design: routing, compression, memory, and computation are increasingly moved into latent space. That instinct is useful. It should be applied gradually.
-
-A memory expert inside MoE is an interesting later experiment. It is not the right starting point. MoE would add routing collapse, load balancing, expert starvation, and systems complexity before the adapter-memory hypothesis has been tested. A dense model with routed LoRA banks can simulate the relevant memory-routing question with fewer confounds.
-
-### 1.7 Continual learning, plasticity, and learned update rates
-
-Continual learning studies the stability-plasticity problem: a model must learn new information without overwriting old information. EWC slows updates to weights important for prior tasks ([Kirkpatrick et al., 2016](https://arxiv.org/abs/1612.00796)). Progressive Neural Networks freeze old columns and add new capacity ([Rusu et al., 2016](https://arxiv.org/abs/1606.04671)). Replay methods rehearse old examples while learning new ones.
-
-The early fast/slow LoRA experiment hand-defines plasticity. The later research target is stronger:
-
-```text
-learn which layers, ranks, adapters, and memory modules should update
-learn how much they should update
-learn when to keep information external instead of consolidating it
-```
-
-This becomes a learned plasticity problem rather than only an adapter-composition problem.
-
-### 1.8 Learning time
-
-Time should not remain a hand-coded hyperparameter. Time2Vec learns vector representations of time with periodic and non-periodic components ([Kazemi et al., 2019](https://arxiv.org/abs/1907.05321)). Time-aware language models train on timestamped text to represent facts as temporally scoped rather than timeless ([Dhingra et al., 2021](https://arxiv.org/abs/2106.15110)). Know-Evolve, diachronic embeddings, and Temporal Graph Networks model entities and graph states that change over time ([Trivedi et al., 2017](https://arxiv.org/abs/1705.05742), [Goel et al., 2019](https://arxiv.org/abs/1907.03143), [Rossi et al., 2020](https://arxiv.org/abs/2006.10637)).
-
-For this proposal, time means more than date:
-
-```text
-recency
-validity
-volatility
-source authority
-stale vs current
-planned vs accepted
-conversation order
-project state
-historical query intent
-```
-
-The temporal-gated LoRA phase tests whether the model can learn a latent time coordinate that controls adapter activation and retrieval behavior.
-
-### 1.9 Temporal benchmarks
-
-TemporalWiki evaluates whether models can acquire updated knowledge while retaining old knowledge across Wikipedia/Wikidata snapshots ([Jang et al., 2022](https://arxiv.org/abs/2204.14211)). StreamingQA evaluates timestamped news QA over time ([Liška et al., 2022](https://arxiv.org/abs/2205.11388)). PAT-Questions studies present-anchored questions whose answers depend on the current date ([Chen et al., 2024](https://arxiv.org/abs/2402.11034)).
-
-These benchmarks motivate metrics that ordinary QA misses:
-
-```text
-current-state accuracy
-as-of-time accuracy
-new update acquisition
-old valid fact retention
-stale-fact suppression
-source support
-retrieval recall
-contradiction handling
-```
-
-### 1.10 Neuroscience as design prior
-
-Complementary Learning Systems theory separates fast hippocampal-like episode learning from slower cortical structure learning ([Blakeman and Mareschal, 2019](https://arxiv.org/abs/1905.02636)). Benna and Fusi model memory as interacting fast and slow variables, where new information enters fast variables and stable structure transfers to slower variables over time ([Benna and Fusi, 2015](https://arxiv.org/abs/1507.07580)). Hippocampal replay and sharp-wave ripples are associated with consolidation during rest and sleep. Predictive coding frames perception and memory as part of a system that maintains a model and updates on prediction error.
-
-<ComparisonBlock
-  left={{
-    eyebrow: 'Useful principle',
-    value: 'multi-timescale memory',
-    label: 'Fast traces, slow consolidation, replay, and protected stable structure',
-    sublabel: 'A design prior from neuroscience and continual learning',
-    tone: 'jade',
-  }}
-  right={{
-    eyebrow: 'Boundary',
-    value: 'not biology',
-    label: 'A LoRA is not cortex and a memory graft is not hippocampus',
-    sublabel: 'The analogy motivates experiments; it does not validate the architecture',
-    tone: 'amber',
-  }}
-/>
-
-The useful claim is modest: artificial memory systems may benefit from separate fast and slow learning channels, offline replay, and consolidation. The specific modules are engineering hypotheses.
-
-### 1.11 Recent anchors (2025–2026)
-
-Several 2025–2026 papers sharpen the design space without replacing the historical spine above.
-
-**Understanding LoRA as Knowledge Memory** ([arXiv:2603.01097](https://arxiv.org/abs/2603.01097)) studies LoRA as modular parametric memory: storage capacity, composability, and interaction with RAG. It supports using LoRA for **memory-use protocol** and temporal cues while keeping exact facts in retrieval.
-
-**Continual Learning via Sparse Memory Finetuning** ([arXiv:2510.15103](https://arxiv.org/abs/2510.15103)) updates only highly activated memory slots on memory-layer models and reports far less forgetting than full fine-tuning or LoRA at matched acquisition. If this holds on temporal agent tasks, sparse memory—not stacked LoRA—may become the primary fuzzy substrate; LoRA would teach *how* to use memory.
-
-**ReFT** and **CS-ReFT** ([arXiv:2404.03592](https://arxiv.org/abs/2404.03592), [arXiv:2503.10617](https://arxiv.org/abs/2503.10617)) intervene on hidden states with low-rank or routed subspaces instead of weight deltas. They are a natural test for temporal/source-scope grafts before committing to large adapter stacks.
-
-**MemoryAgentBench** ([arXiv:2507.05257](https://arxiv.org/abs/2507.05257)) and **MemGym** ([arXiv:2605.20833](https://arxiv.org/abs/2605.20833)) evaluate memory through incremental multi-turn interaction and long-horizon agent regimes (tool use, research, coding). They motivate moving from static QA to harnesses that score retrieval, test-time learning, and selective forgetting together.
-
-**MeMo** and related memory-as-model work ([arXiv:2605.15156](https://arxiv.org/abs/2605.15156)) keep the base LLM frozen while a specialist memory model holds cross-document structure. That path is a deliberate foil: grafts integrate inside the base model’s computation; MeMo externalizes memory entirely.
-
-```text
-rank-matched single LoRA
-  vs fast/slow LoRA
-  vs temporal-gated LoRA
-  vs sparse memory finetuning
-  vs ReFT temporal graft
-```
-
-If temporal-gated LoRA cannot beat a rank-matched single LoRA, the layered-LoRA stack is probably overbuilt. If sparse memory finetuning wins clearly, LoRA should remain the protocol layer, not the main memory store.
+Early falsification order: rank-matched single LoRA, then fast/slow stack, then temporal-gated LoRA, then sparse memory finetuning or ReFT. If temporal gating cannot beat rank-matched single LoRA, the layered stack is probably overbuilt. If sparse finetuning wins clearly on temporal agent tasks, LoRA should remain the protocol layer, not the main fuzzy store.
 
 ## 2. Core hypothesis
 
@@ -324,80 +79,7 @@ The research program has three nested claims:
 
 The project should be allowed to fail early. If stacked LoRA cannot beat a rank-matched single LoRA, there is little reason to build a memory compiler. If temporal-gated LoRA cannot beat hand-defined fast/slow LoRA, learned time should not be assumed. If dream replay improves latent recall but worsens source discipline, the method is unsafe for evidence-grounded work.
 
-## 3. Shared vocabulary
-
-<DataTable
-  caption="Vocabulary used in the proposal."
-  columns={[
-    { key: 'term', label: 'Term' },
-    { key: 'definition', label: 'Definition' },
-    { key: 'update', label: 'Update frequency' },
-  ]}
-  rows={[
-    {
-      term: 'Base model',
-      definition: 'Frozen dense LLM used for all early experiments; Gemma 4 E4B (Phase 0 agent), Qwen3-4B, SmolLM3-3B, or Phi-4-mini are plausible targets.',
-      update: 'Never during early phases',
-    },
-    {
-      term: 'Behavior LoRA',
-      definition: 'An existing or separately trained LoRA that changes model style, instruction behavior, or task orientation.',
-      update: 'External / pre-existing',
-    },
-    {
-      term: 'Protocol LoRA',
-      definition: 'Adapter trained on retrieval and tool-use traces: search, inspect, cite, defer, and avoid unsupported answers.',
-      update: 'Rarely',
-    },
-    {
-      term: 'Temporal LoRA',
-      definition: 'Adapter trained to recognize stale/current/historical/planned/source-scoped situations.',
-      update: 'Occasionally',
-    },
-    {
-      term: 'Fast memory LoRA',
-      definition: 'Plastic adapter trained on recent updates, new sessions, or volatile project state.',
-      update: 'Every update batch',
-    },
-    {
-      term: 'Slow memory LoRA',
-      definition: 'Protected adapter that absorbs stable conventions and repeated patterns through consolidation.',
-      update: 'Only after replay / distillation',
-    },
-    {
-      term: 'Corpus LoRA',
-      definition: 'Hot-swappable adapter associated with a project, repository, user domain, or document collection.',
-      update: 'Per corpus',
-    },
-    {
-      term: 'Latent router',
-      definition: 'Small routing model that reads hidden states and selects adapters, retrieval, or memory paths.',
-      update: 'After adapter baselines work',
-    },
-    {
-      term: 'Temporal coordinate',
-      definition: 'Learned latent variable encoding recency, validity, source scope, volatility, and query-time intent.',
-      update: 'Learned during temporal-gating phase',
-    },
-    {
-      term: 'Memory module',
-      definition: 'Separate latent state that stores fuzzy project/domain memory, not exact evidence.',
-      update: 'During offline replay',
-    },
-    {
-      term: 'Memory compiler',
-      definition: 'Meta-learned initializer that converts messy corpora into memory slots, adapter initializations, gates, source weights, or distilled training traces.',
-      update: 'Across many corpora',
-    },
-    {
-      term: 'Dreaming loop',
-      definition: 'Offline replay process that trains memory, practices retrieval/tool behavior, and consolidates stable patterns.',
-      update: 'Periodic / nightly',
-    },
-  ]}
-/>
-
-## 4. Architecture ladder
+## 3. Architecture ladder
 
 The architecture is a ladder rather than a single design. Each level replaces a manually specified behavior with a learned one.
 
@@ -416,23 +98,7 @@ Level 10: Learned plasticity field
 Level 11: MoE memory expert (only if dense grafts justify it)
 ```
 
-<BarChart
-  highlight="Stacked LoRA"
-  caption="Research phases should begin with cheap, falsifiable adapter experiments before moving into latent routing, memory modules, and meta-learning. Values are rough complexity scores."
-  data={[
-    { label: 'Base RAG', value: 10, count: 'baseline' },
-    { label: 'Protocol LoRA', value: 20, count: 'tool discipline' },
-    { label: 'Stacked LoRA', value: 32, count: 'first memory test' },
-    { label: 'Fast/slow consolidation', value: 45, count: 'timescale test' },
-    { label: 'Temporal-gated LoRA', value: 58, count: 'learn time' },
-    { label: 'Routed LoRA bank', value: 68, count: 'latent routing' },
-    { label: 'Dream replay', value: 78, count: 'offline updates' },
-    { label: 'Memory compiler', value: 92, count: 'meta-learning' },
-    { label: 'MoE memory expert', value: 100, count: 'scaling' },
-  ]}
-/>
-
-## 5. Experiment progress (first slice)
+## 4. Experiment progress (first slice)
 
 The [autoresearch-llmg](https://github.com/haowjy/autoresearch-llmg) harness is running the staged program above. **Phase 0 (canonical)** is experiment **P0-TW-03** on [TemporalWiki drift (easy)](https://huggingface.co/datasets/saxenan3/temporalwiki-drift-cl-easy): a versioned wiki corpus (~1004 `doc_id` slices), acquisition split (`test`) and retention split (`stable`), with **subject** recall@5 and **temporal** recall@5 (gold hit whose `last_edited` matches the question’s as-of date). Gate 0 (RAG ceiling) passed on corpus **v2** (May 2026).
 
@@ -480,7 +146,7 @@ Early exploratory runs **P0-TW-01** and **P0-TW-01b** used a collapsed subject i
 
 Program index: [RESEARCH-LOG](https://github.com/haowjy/autoresearch-llmg/blob/main/RESEARCH-LOG.md) · experiment README: [P0-TW-03](https://github.com/haowjy/autoresearch-llmg/tree/main/llmg/experiments/P0-TW-03).
 
-## 6. Datasets
+## 5. Datasets
 
 **Active now.** [TemporalWiki drift CL (easy)](https://huggingface.co/datasets/saxenan3/temporalwiki-drift-cl-easy) — four drift snapshots plus a stable probe; each train/stable row is one versioned `doc_id` document with `first_edited` / `last_edited` metadata. That structure is why it is the first benchmark: metrics can separate “found the entity” from “found the slice valid at as-of *t*.”
 
@@ -498,7 +164,7 @@ Custom: repo/git history (Phase -1), synthetic org/wiki (Phase 4)
 
 Agent-session benchmarks ([MemoryAgentBench](https://arxiv.org/abs/2507.05257), [MemGym](https://arxiv.org/abs/2605.20833)) are on the roadmap for when the harness moves beyond static temporal QA. Full catalog: [llmg/DATASETS.md](https://github.com/haowjy/autoresearch-llmg/blob/main/llmg/DATASETS.md).
 
-## 7. Full research timeline
+## 6. Full research timeline
 
 The timeline below is ordered by falsifiability. Early phases should use dense models and LoRA because they are cheap, controllable, and easy to ablate. MoE, learned plasticity, and memory compilers are later phases because they introduce additional confounds.
 
@@ -542,7 +208,7 @@ initial evaluation candidates
 
 **Implementation (running).** Experiment [P0-TW-03](https://github.com/haowjy/autoresearch-llmg/tree/main/llmg/experiments/P0-TW-03) exports [TemporalWiki drift (easy)](https://huggingface.co/datasets/saxenan3/temporalwiki-drift-cl-easy) to filesystem/SQLite stores, runs a matrix of harness cells (BM25, hybrid BM25+dense, rg) and agent cells (shell search vs `search_hybrid`) on `google/gemma-4-E4B-it`, and logs structured agent traces. Corpus **v2** indexes ~1004 versioned `doc_id`s; metrics include subject recall@5, temporal recall@5, and answer scores against gold `object`.
 
-**Status.** Gate 0 passed on corpus v2 (May 2026). Pinned baselines are in **§5 Experiment progress** above. Deprecated **P0-TW-01** / **P0-TW-01b** shakedown runs used a collapsed index and are kept only for archaeology.
+**Status.** Gate 0 passed on corpus v2 (May 2026). Pinned baselines are in **§4 Experiment progress** above. Deprecated **P0-TW-01** / **P0-TW-01b** shakedown runs used a collapsed index and are kept only for archaeology.
 
 **Failure condition.** If hybrid retrieval cannot find relevant evidence at acceptable temporal precision, adapter experiments lack a grounded target. The shell agent’s low temporal recall on `test` shows that problem is not fully closed by indexing alone—tool discipline and temporal scope still matter.
 
@@ -1223,7 +889,7 @@ continual update cost
 
 **Failure condition.** If a routed LoRA bank on a dense base matches the MoE memory expert, the MoE complexity is not justified for this research path.
 
-## 8. Efficiency plan
+## 7. Efficiency plan
 
 The proposal has two efficiency axes: inference efficiency and dreaming efficiency.
 
@@ -1280,7 +946,7 @@ always test unsupported-answer rate before accepting an update
 separate exact evidence updates from latent memory updates
 ```
 
-## 9. Model targets
+## 8. Model targets
 
 Initial experiments should use dense models. Dense models isolate the memory mechanism from sparse-routing confounds.
 
@@ -1293,7 +959,7 @@ Reasoning-oriented target: Phi-4-mini-instruct
 
 MoE should enter only after dense experiments show that temporal gating, stacked adapters, or routed corpus LoRAs improve memory behavior.
 
-## 10. Global benchmark suite
+## 9. Global benchmark suite
 
 Every phase should report a common scorecard.
 
@@ -1353,7 +1019,7 @@ Every phase should report a common scorecard.
   ]}
 />
 
-## 11. Decision gates
+## 10. Decision gates
 
 The roadmap should have explicit gates.
 
@@ -1391,7 +1057,7 @@ Gate 10:
 
 These gates keep the proposal from becoming a pile of plausible modules. Each module must earn its place.
 
-## 12. Why this might work
+## 11. Why this might work
 
 The proposal is plausible because the pieces are individually supported:
 
@@ -1414,7 +1080,7 @@ that file is likely relevant
 that claim needs source evidence
 ```
 
-## 13. Why this might fail
+## 12. Why this might fail
 
 <Callout type="alert" eyebrow="Risks">
   The most serious failure mode is not that the model fails to remember. It is that the model remembers too confidently without retrieving evidence. Any latent memory gain must be checked against source support and stale-fact suppression.
@@ -1435,7 +1101,7 @@ inference cost grows with too many active adapters
 memory compiler is more expensive than heuristic extraction
 ```
 
-## 14. Relation to MeMo
+## 13. Relation to MeMo
 
 MeMo, the paper that motivates part of this discussion, is a useful foil. Its central move is to encode new knowledge into a dedicated memory model while keeping the main LLM unchanged. That makes the memory plug-in compatible with closed models and avoids modifying the base LLM directly.
 
@@ -1454,7 +1120,7 @@ Layered memory grafts:
 
 The open question is whether smaller LoRA/graft modules plus retrieval practice can capture some of MeMo's synthesis benefits while preserving more provenance and requiring less than training a separate memory model.
 
-## 15. The smallest publishable experiment
+## 14. The smallest publishable experiment
 
 The first publishable experiment should be narrow:
 
@@ -1474,7 +1140,7 @@ metrics: update, retention, stale suppression, evidence support, retrieval recal
 
 A successful result would justify learned temporal gates. A failed result would still be useful: it would show that simple retrieval or single-adapter training is sufficient for the tested setting.
 
-## 16. Long-term target
+## 15. Long-term target
 
 The final target is a memory lifecycle for agentic systems:
 

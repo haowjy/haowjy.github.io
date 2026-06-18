@@ -31,7 +31,7 @@ export default function ResumePage({
             target="_blank"
             rel="noreferrer"
             aria-label="Download resume PDF (opens in a new tab)"
-            className="inline-flex items-center gap-2 rounded-[3px] border border-jade/40 bg-jade/10 px-3 py-1.5 font-mono text-meta tracking-meta uppercase text-jade transition-colors hover:bg-jade-deep hover:text-paper hover:border-jade-deep"
+            className="inline-flex items-center gap-2 rounded-[3px] border border-jade/40 bg-jade/10 px-3 py-1.5 font-body text-meta text-jade transition-colors hover:bg-jade-deep hover:text-paper hover:border-jade-deep"
           >
             <span aria-hidden="true" className="text-[0.95rem] leading-none">
               ⤓
@@ -39,7 +39,7 @@ export default function ResumePage({
             <span>Download PDF</span>
           </a>
           {totalSectionPages > 1 && (
-            <span className="font-mono text-meta tracking-meta uppercase text-ink-mute">
+            <span className="font-body text-meta text-ink-mute tabular-nums">
               {pageInSection} / {totalSectionPages}
             </span>
           )}

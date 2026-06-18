@@ -33,7 +33,7 @@ export default function ProjectListItem({ project: p, number }: Props) {
         `items-center` balances them visually against the title.
       */}
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-        <span className="font-mono text-meta tabular-nums text-ink-mute leading-none">
+        <span className="font-body text-meta tabular-nums text-ink-mute leading-none">
           {String(number).padStart(2, '0')}
         </span>
         <h3 className="m-0 font-display font-normal leading-none text-ink text-[clamp(1.2rem,1vw+0.95rem,1.5rem)]">
@@ -41,7 +41,7 @@ export default function ProjectListItem({ project: p, number }: Props) {
         </h3>
         <StarChip source={p.starSource} />
         {p.links.length > 0 && (
-          <span className="font-mono text-[0.75rem] tracking-meta uppercase text-jade leading-none">
+          <span className="font-body text-meta text-jade leading-none">
             {p.links.map((link, li) => (
               <span key={link.href}>
                 <a

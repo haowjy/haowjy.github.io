@@ -241,7 +241,7 @@ export default function HomeRoute() {
         folio: SECTION_FOLIOS.writing,
         footerLabel: 'Writing',
         isSectionStart: true,
-        content: <WritingPage posts={notePosts.slice(0, 5)} />,
+        content: <WritingPage posts={notePosts.slice(0, 2)} />,
       })
     }
 

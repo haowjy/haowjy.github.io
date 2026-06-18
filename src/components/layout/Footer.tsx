@@ -1,6 +1,6 @@
 const SOCIAL_LINKS = [
-  { href: 'https://github.com/haowjy', label: 'GITHUB' },
-  { href: 'https://linkedin.com/in/jimmy-yao', label: 'LINKEDIN' },
+  { href: 'https://github.com/haowjy', label: 'GitHub' },
+  { href: 'https://linkedin.com/in/jimmy-yao', label: 'LinkedIn' },
   { href: 'https://x.com/haowjy', label: 'X' },
 ] as const
 

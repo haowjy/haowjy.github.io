@@ -33,7 +33,7 @@ export default function ProjectsPage({
           Projects
         </h2>
         {totalSectionPages > 1 && (
-          <span className="font-mono text-meta tracking-meta uppercase text-ink-mute">
+          <span className="font-body text-meta text-ink-mute tabular-nums">
             {pageInSection} / {totalSectionPages}
           </span>
         )}

@@ -11,8 +11,8 @@ export const author = {
 }
 
 export const externalLinks = [
-  { label: 'GITHUB', href: 'https://github.com/haowjy' },
-  { label: 'LINKEDIN', href: 'https://linkedin.com/in/jimmy-yao' },
+  { label: 'GitHub', href: 'https://github.com/haowjy' },
+  { label: 'LinkedIn', href: 'https://linkedin.com/in/jimmy-yao' },
   { label: 'X', href: 'https://x.com/haowjy' },
 ] as const
 

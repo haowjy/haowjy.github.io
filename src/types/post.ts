@@ -1,4 +1,5 @@
 import type { ComponentType } from 'react'
+import type { TocHeading } from '@/lib/noteHeadings'
 
 // MDX-rendered React components accept a `components` map so we can override
 // elements / inject custom blocks (FigureLead, BarChart, etc.) per page.
@@ -21,7 +22,7 @@ export type PostFrontmatter = {
   date: string
   tags: string[]
   description: string
-  /** Optional override; auto-computed from MDX content if absent. */
+  /** Optional override; auto-computed from MDX source at build/dev time. */
   readingTime?: number
   ogImage?: string
   /** Defaults to true when omitted — notes are drafts until explicitly published. */
@@ -31,5 +32,6 @@ export type PostFrontmatter = {
 }
 
 export type Post = PostFrontmatter & {
+  headings: TocHeading[]
   Component: ComponentType<MDXComponentProps>
 }

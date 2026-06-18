@@ -18,7 +18,7 @@ type Props = {
 export default function ResumeListBlock({ block: b }: Props) {
   if (b.kind === 'heading') {
     return (
-      <h3 className="m-0 mt-2 font-mono font-medium text-meta tracking-meta uppercase text-ink-mute">
+      <h3 className="m-0 mt-2 font-body font-medium text-meta text-ink-mute">
         {b.value}
       </h3>
     )
@@ -31,11 +31,11 @@ export default function ResumeListBlock({ block: b }: Props) {
           <h4 className="m-0 font-display font-normal text-h2 leading-snug">
             {r.org}
           </h4>
-          <span className="font-mono text-[0.72rem] tracking-meta uppercase text-ink-mute">
+          <span className="font-body text-meta text-ink-mute tabular-nums">
             {r.dateRange}
           </span>
         </div>
-        <p className="m-0 font-mono text-meta tracking-[0.04em] text-ink-mute">
+        <p className="m-0 font-body text-meta text-ink-mute">
           {r.role}
         </p>
         {r.prose && (
@@ -54,11 +54,11 @@ export default function ResumeListBlock({ block: b }: Props) {
           <h4 className="m-0 font-display font-normal text-h2 leading-snug">
             {e.school}
           </h4>
-          <span className="font-mono text-[0.72rem] tracking-meta uppercase text-ink-mute">
+          <span className="font-body text-meta text-ink-mute tabular-nums">
             {e.year}
           </span>
         </div>
-        <p className="m-0 font-mono text-meta tracking-[0.04em] text-ink-mute">
+        <p className="m-0 font-body text-meta text-ink-mute">
           {e.credential}
         </p>
       </article>

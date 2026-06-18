@@ -1,0 +1,262 @@
+{
+  "75-percent-redundant-reads": {
+    "headings": [
+      {
+        "depth": 2,
+        "text": "What Agents Actually Do All Day",
+        "id": "what-agents-actually-do-all-day"
+      },
+      {
+        "depth": 2,
+        "text": "By Model",
+        "id": "by-model"
+      },
+      {
+        "depth": 2,
+        "text": "The Read-After-Edit Gap",
+        "id": "the-read-after-edit-gap"
+      },
+      {
+        "depth": 2,
+        "text": "Do Newer Models Fix This?",
+        "id": "do-newer-models-fix-this"
+      },
+      {
+        "depth": 2,
+        "text": "A \"working memory\" cache",
+        "id": "a-working-memory-cache"
+      },
+      {
+        "depth": 2,
+        "text": "Prior work",
+        "id": "prior-work"
+      },
+      {
+        "depth": 2,
+        "text": "Experimental design",
+        "id": "experimental-design"
+      }
+    ],
+    "readingTime": 15
+  },
+  "layered-latent-memory-grafts": {
+    "headings": [
+      {
+        "depth": 2,
+        "text": "1. Literature map",
+        "id": "1-literature-map"
+      },
+      {
+        "depth": 2,
+        "text": "2. Core hypothesis",
+        "id": "2-core-hypothesis"
+      },
+      {
+        "depth": 2,
+        "text": "3. Architecture ladder",
+        "id": "3-architecture-ladder"
+      },
+      {
+        "depth": 2,
+        "text": "4. Experiment progress (first slice)",
+        "id": "4-experiment-progress-first-slice"
+      },
+      {
+        "depth": 2,
+        "text": "5. Datasets",
+        "id": "5-datasets"
+      },
+      {
+        "depth": 2,
+        "text": "6. Full research timeline",
+        "id": "6-full-research-timeline"
+      },
+      {
+        "depth": 3,
+        "text": "Phase -1: Data inventory and privacy boundary",
+        "id": "phase--1-data-inventory-and-privacy-boundary"
+      },
+      {
+        "depth": 3,
+        "text": "Phase 0: TemporalWiki RAG floor (P0-TW-03) — Gate 0 passed",
+        "id": "phase-0-temporalwiki-rag-floor-p0-tw-03--gate-0-passed"
+      },
+      {
+        "depth": 3,
+        "text": "Phase 1: Protocol LoRA for retrieval and tool discipline (P1-02 — next)",
+        "id": "phase-1-protocol-lora-for-retrieval-and-tool-discipline-p1-02--next"
+      },
+      {
+        "depth": 3,
+        "text": "Phase 2: Stacked LoRA composition",
+        "id": "phase-2-stacked-lora-composition"
+      },
+      {
+        "depth": 3,
+        "text": "Phase 3: Manual fast/slow LoRA consolidation",
+        "id": "phase-3-manual-fastslow-lora-consolidation"
+      },
+      {
+        "depth": 3,
+        "text": "Phase 4: Synthetic temporal worlds",
+        "id": "phase-4-synthetic-temporal-worlds"
+      },
+      {
+        "depth": 3,
+        "text": "Phase 5: Learned temporal-gated LoRA",
+        "id": "phase-5-learned-temporal-gated-lora"
+      },
+      {
+        "depth": 3,
+        "text": "Phase 6: Routed corpus LoRA bank",
+        "id": "phase-6-routed-corpus-lora-bank"
+      },
+      {
+        "depth": 3,
+        "text": "Phase 7: Real agent-history benchmark",
+        "id": "phase-7-real-agent-history-benchmark"
+      },
+      {
+        "depth": 3,
+        "text": "Phase 8: Dream replay v0",
+        "id": "phase-8-dream-replay-v0"
+      },
+      {
+        "depth": 3,
+        "text": "Phase 9: Separate latent memory module",
+        "id": "phase-9-separate-latent-memory-module"
+      },
+      {
+        "depth": 3,
+        "text": "Phase 10: Memory compiler",
+        "id": "phase-10-memory-compiler"
+      },
+      {
+        "depth": 3,
+        "text": "Phase 11: Learned plasticity field",
+        "id": "phase-11-learned-plasticity-field"
+      },
+      {
+        "depth": 3,
+        "text": "Phase 12: MoE memory expert",
+        "id": "phase-12-moe-memory-expert"
+      },
+      {
+        "depth": 2,
+        "text": "7. Efficiency plan",
+        "id": "7-efficiency-plan"
+      },
+      {
+        "depth": 3,
+        "text": "Inference rules",
+        "id": "inference-rules"
+      },
+      {
+        "depth": 3,
+        "text": "Dreaming rules",
+        "id": "dreaming-rules"
+      },
+      {
+        "depth": 2,
+        "text": "8. Model targets",
+        "id": "8-model-targets"
+      },
+      {
+        "depth": 2,
+        "text": "9. Global benchmark suite",
+        "id": "9-global-benchmark-suite"
+      },
+      {
+        "depth": 2,
+        "text": "10. Decision gates",
+        "id": "10-decision-gates"
+      },
+      {
+        "depth": 2,
+        "text": "11. Why this might work",
+        "id": "11-why-this-might-work"
+      },
+      {
+        "depth": 2,
+        "text": "12. Why this might fail",
+        "id": "12-why-this-might-fail"
+      },
+      {
+        "depth": 2,
+        "text": "13. Relation to MeMo",
+        "id": "13-relation-to-memo"
+      },
+      {
+        "depth": 2,
+        "text": "14. The smallest publishable experiment",
+        "id": "14-the-smallest-publishable-experiment"
+      },
+      {
+        "depth": 2,
+        "text": "15. Long-term target",
+        "id": "15-long-term-target"
+      },
+      {
+        "depth": 2,
+        "text": "References",
+        "id": "references"
+      }
+    ],
+    "readingTime": 23
+  },
+  "what-happened-to-my-tokens": {
+    "headings": [
+      {
+        "depth": 2,
+        "text": "What I Tried First",
+        "id": "what-i-tried-first"
+      },
+      {
+        "depth": 2,
+        "text": "The Transcript",
+        "id": "the-transcript"
+      },
+      {
+        "depth": 2,
+        "text": "The Explorer Had the Answer",
+        "id": "the-explorer-had-the-answer"
+      },
+      {
+        "depth": 2,
+        "text": "tests/unit/platform/testterminatescopesync.py",
+        "id": "testsunitplatformtestterminatescopesyncpy"
+      },
+      {
+        "depth": 3,
+        "text": "Smells",
+        "id": "smells"
+      },
+      {
+        "depth": 3,
+        "text": "Recommendations",
+        "id": "recommendations"
+      },
+      {
+        "depth": 2,
+        "text": "What I Changed Next",
+        "id": "what-i-changed-next"
+      },
+      {
+        "depth": 2,
+        "text": "The Takeaway",
+        "id": "the-takeaway"
+      },
+      {
+        "depth": 2,
+        "text": "While I Had the Parser Open",
+        "id": "while-i-had-the-parser-open"
+      },
+      {
+        "depth": 2,
+        "text": "What I'm Building Next",
+        "id": "what-im-building-next"
+      }
+    ],
+    "readingTime": 9
+  }
+}

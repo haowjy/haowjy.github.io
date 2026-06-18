@@ -2,9 +2,9 @@ import { posts } from '@/content/notes'
 import { author } from '@/content/site'
 
 const SITE_URL = 'https://haowjy.github.io'
-const SITE_TITLE = `${author.name} — ${author.role}`
+const SITE_TITLE = `${author.name} · ${author.role}`
 const DEFAULT_DESCRIPTION = author.focus
-const NOTES_DESCRIPTION = 'Drafts / notes — half-writing by AI.'
+const NOTES_DESCRIPTION = 'Drafts / notes (half-written by AI).'
 
 export type PageMeta = {
   title: string
@@ -33,7 +33,7 @@ export function getPageMeta(pathname: string): PageMeta {
 
   if (normalizedPathname === '/notes') {
     return {
-      title: `Drafts / notes — ${author.name}`,
+      title: `Drafts / notes · ${author.name}`,
       description: NOTES_DESCRIPTION,
       canonicalUrl: toAbsoluteUrl('/notes'),
       ogType: 'website',
@@ -45,7 +45,7 @@ export function getPageMeta(pathname: string): PageMeta {
     const post = posts.find((entry) => entry.slug === slug)
     if (post) {
       return {
-        title: `${post.title} — ${author.name}`,
+        title: `${post.title} · ${author.name}`,
         description: post.description || NOTES_DESCRIPTION,
         canonicalUrl: toAbsoluteUrl(`/notes/${post.slug}`),
         ogType: 'article',

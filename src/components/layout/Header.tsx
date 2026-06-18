@@ -67,10 +67,6 @@ export default function Header() {
     <>
       <header className={headerClass}>
         <div className="site-header__inner">
-          <div className="site-header__mobile-toggle" aria-hidden={false}>
-            <ThemeToggle />
-          </div>
-
           <Link
             className="site-header__monogram"
             to="/"
@@ -155,6 +151,10 @@ export default function Header() {
             >
               Notes
             </Link>
+
+            <div className="site-header__theme">
+              <ThemeToggle />
+            </div>
           </nav>
 
           {showSectionLinks && (
@@ -170,12 +170,6 @@ export default function Header() {
           )}
         </div>
       </header>
-
-      <div
-        className={`site-theme-toggle-corner${isManuscript ? ' site-theme-toggle-corner--manuscript' : ''}`}
-      >
-        <ThemeToggle />
-      </div>
     </>
   )
 }

@@ -8,7 +8,7 @@ export default function CoverPage() {
   const year = new Date().getFullYear()
   return (
     <div className="flex h-full flex-col">
-      <div className="font-mono text-meta tracking-meta uppercase text-ink-mute">
+      <div className="font-body text-meta text-ink-mute tabular-nums">
         {year}
       </div>
 
@@ -28,13 +28,13 @@ export default function CoverPage() {
         <p className="m-0 font-display italic text-[clamp(1.15rem,1.2vw+0.95rem,1.45rem)] text-ink-soft leading-snug">
           {author.role}
           <span className="mx-2 text-ink-fade">·</span>
-          <span className="not-italic font-mono text-[0.85em] tracking-meta uppercase text-ink-mute align-middle">
+          <span className="not-italic font-body text-[0.9em] text-ink-mute align-middle">
             {author.focus}
           </span>
         </p>
       </div>
 
-      <div className="mt-auto pb-2 font-mono text-meta tracking-meta uppercase text-ink-fade">
+      <div className="mt-auto pb-2 font-body text-meta text-ink-fade">
         ↓ scroll to turn the page
       </div>
     </div>

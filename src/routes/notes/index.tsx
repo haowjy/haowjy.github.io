@@ -10,7 +10,8 @@ export default function NotesIndexRoute() {
     <article className="archive notes-reader">
       <div className="archive__page paper-noise">
         <header className="archive__head">
-          <h1 className="archive__title">Drafts / notes — half-writing by AI</h1>
+          <h1 className="archive__title">Drafts / notes</h1>
+          <p className="archive__dek">(half-written by AI)</p>
           <p className="archive__count">
             {posts.length}{' '}
             {posts.length === 1 ? 'note' : 'notes'}

@@ -36,6 +36,7 @@
   line-height: var(--leading-snug);
   letter-spacing: var(--tracking-tight);
   color: var(--ink);
+  scroll-margin-top: calc(var(--header-height) + 1.25rem);
 }
 
 .notes-reader .note-prose h2 {

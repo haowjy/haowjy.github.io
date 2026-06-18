@@ -19,7 +19,7 @@ export default function AboutPage() {
           aren't asked to read the bio first. */}
       <nav
         aria-label="Contact"
-        className="flex flex-wrap gap-x-6 gap-y-2 font-mono text-meta tracking-meta uppercase text-jade"
+        className="flex flex-wrap gap-x-6 gap-y-2 font-body text-meta text-jade"
       >
         {externalLinks.map((link, i) => (
           <span key={link.label} className="inline-flex items-center gap-3">

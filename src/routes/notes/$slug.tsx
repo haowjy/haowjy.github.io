@@ -37,7 +37,12 @@ export default function NotesPostRoute() {
   const PostComponent = ctx.post.Component
 
   return (
-    <PostLayout post={ctx.post} prev={ctx.prev} next={ctx.next}>
+    <PostLayout
+      post={ctx.post}
+      headings={ctx.post.headings}
+      prev={ctx.prev}
+      next={ctx.next}
+    >
       <PostComponent components={mdxComponents} />
     </PostLayout>
   )
