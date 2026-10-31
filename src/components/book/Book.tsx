@@ -22,6 +22,9 @@ type Layout = {
 /** Page proportions: a trade paperback in spread, a taller sheet on phones. */
 const SPREAD_RATIO = 0.72
 const SINGLE_RATIO = 0.64
+/** A full page turn, on every screen size. */
+const TURN_MS = 820
+
 /** Vertical room the controls and top bar need, in px. */
 const CHROME_Y = 150
 
@@ -209,14 +212,18 @@ function Engine({
       startPage,
       drawShadow: true,
       maxShadowOpacity: 0.45,
-      flippingTime: reduced ? 1 : 900,
+      flippingTime: reduced ? 1 : TURN_MS,
       showPageCorners: !reduced,
+      // Clicking text shouldn't turn the page; corners (which peel on
+      // hover) and the controls do.
+      disableFlipByClick: true,
       mobileScrollSupport: true,
       swipeDistance: 24,
       autoSize: true,
       useMouseEvents: !touch,
     })
     pf.loadFromHTML(els)
+    const untune = reduced ? undefined : tuneMotion(pf, block)
     const detachTouch = touch ? attachTouch(block, pf, reduced) : undefined
     pf.on('flip', (e) => onFlipRef.current(e.data))
     pf.on('init', (e) => onFlipRef.current(e.data.page))
@@ -224,6 +231,7 @@ function Engine({
 
     return () => {
       detachTouch?.()
+      untune?.()
       flipRef.current = null
       pf.destroy()
     }
@@ -251,6 +259,98 @@ function Engine({
   )
 }
 
+/** The parts of StPageFlip's flip controller we reach into (2.0.7). */
+type FlipInternals = {
+  flipController: {
+    getAnimationDuration: (points: number) => number
+    getCalculation: () => {
+      getPosition: () => { x: number; y: number }
+      getCorner: () => 'top' | 'bottom'
+    } | null
+    getBoundsRect: () => { height: number; pageWidth: number }
+    getState: () => string
+    stopMove: () => void
+    animateFlippingTo: (
+      from: { x: number; y: number },
+      to: { x: number; y: number },
+      isTurned: boolean,
+    ) => void
+  }
+  getRender: () => {
+    startAnimation: (frames: (() => void)[], duration: number, onEnd: () => void) => void
+  }
+}
+
+// Sine in-out: lifts promptly (a strong ease-in reads as lag after a click).
+const easeInOut = (t: number) => -(Math.cos(Math.PI * t) - 1) / 2
+const easeOut = (t: number) => 1 - (1 - t) ** 3
+
+/**
+ * Make every turn move the same way. Out of the box the engine times a
+ * turn by how many pixels the fold travels (so phones turn faster than
+ * desktops, and a released drag takes an arbitrary time) and steps through
+ * the frames linearly. Here a full turn always takes TURN_MS, a partial one
+ * takes its share of that, and frames are eased: from rest the page lifts
+ * and settles (ease-in-out); released from a drag it is already moving, so
+ * it only settles (ease-out).
+ */
+function tuneMotion(pf: PageFlip, block: HTMLElement) {
+  const app = pf as unknown as FlipInternals
+  const fc = app.flipController
+  const render = app.getRender()
+
+  fc.getAnimationDuration = (points: number) => {
+    const fullTurn = 2 * fc.getBoundsRect().pageWidth
+    return Math.max(160, Math.min(1, points / fullTurn) * TURN_MS)
+  }
+
+  // Mouse release: dragging more than a third of a page turns it, as on
+  // touch. (The engine's default needs the fold dragged past the spine.)
+  // Distance is the pointer's own travel; the fold position also moves
+  // with the hover corner-peel, which made the outcome timing-dependent.
+  let downX = 0
+  let lastX = 0
+  const onDown = (e: MouseEvent) => {
+    downX = lastX = e.clientX
+  }
+  const onMove = (e: MouseEvent) => {
+    lastX = e.clientX
+  }
+  block.addEventListener('mousedown', onDown)
+  window.addEventListener('mousemove', onMove)
+  fc.stopMove = () => {
+    if (!fc.getCalculation()) return
+    releaseFold(pf, Math.abs(lastX - downX) > fc.getBoundsRect().pageWidth / 3)
+  }
+
+  const start = render.startAnimation.bind(render)
+  render.startAnimation = (frames, duration, onEnd) => {
+    const ease = fc.getState() === 'user_fold' ? easeOut : easeInOut
+    const n = frames.length
+    const eased =
+      n < 3 ? frames : frames.map((_, i) => frames[Math.round(ease(i / (n - 1)) * (n - 1))])
+    start(eased, duration, onEnd)
+  }
+
+  return () => {
+    block.removeEventListener('mousedown', onDown)
+    window.removeEventListener('mousemove', onMove)
+  }
+}
+
+/**
+ * Finish (or cancel) a drag from wherever the fold is now. Same as the
+ * engine's own release, except the direction is ours to choose.
+ */
+function releaseFold(pf: PageFlip, turn: boolean) {
+  const fc = (pf as unknown as FlipInternals).flipController
+  const calc = fc.getCalculation()
+  if (!calc) return
+  const rect = fc.getBoundsRect()
+  const y = calc.getCorner() === 'bottom' ? rect.height : 0
+  fc.animateFlippingTo(calc.getPosition(), { x: turn ? -rect.pageWidth : rect.pageWidth, y }, turn)
+}
+
 /**
  * Touch gestures with a direction lock. The first ~10px of movement decide:
  * mostly vertical is left to the browser (scrolling); mostly horizontal
@@ -273,7 +373,7 @@ function attachTouch(block: HTMLElement, pf: PageFlip, reduced: boolean) {
 
   // The edge to grab: right edge of the visible page to go forward, the
   // left edge to go back. Coordinates are relative to the engine's block.
-  const edgeFor = (forward: boolean, y: number) => {
+  const edgeFor = (forward: boolean) => {
     const rect = pf.getRender().getRect()
     const portrait = pf.getRender().getOrientation() === 'portrait'
     const pw = rect.pageWidth
@@ -282,7 +382,9 @@ function attachTouch(block: HTMLElement, pf: PageFlip, reduced: boolean) {
       : portrait
         ? rect.left + pw + 4
         : rect.left + 4
-    return { x, y: Math.min(Math.max(y, rect.top + 4), rect.top + rect.height - 4) }
+    // Always the bottom corner, like the buttons and keys, so every turn
+    // folds the same way.
+    return { x, y: rect.top + rect.height - 6 }
   }
 
   const onStart = (e: TouchEvent) => {
@@ -305,14 +407,16 @@ function attachTouch(block: HTMLElement, pf: PageFlip, reduced: boolean) {
       lock = Math.abs(dx) > Math.abs(dy) ? 'h' : 'v'
       if (lock === 'h') {
         if (reduced) return
-        origin = edgeFor(dx < 0, start.y)
+        origin = edgeFor(dx < 0)
         pf.startUserTouch(origin)
       }
     }
     if (lock !== 'h') return
     e.preventDefault()
     if (reduced) return
-    pf.userMove({ x: origin.x + dx, y: origin.y + dy * 0.4 }, true)
+    // Follow the finger sideways; lift the corner a little as it travels.
+    const lift = Math.min(0, dy * 0.35) - Math.abs(dx) * 0.08
+    pf.userMove({ x: origin.x + dx, y: origin.y + lift }, true)
   }
 
   const onEnd = (e: TouchEvent) => {
@@ -327,14 +431,11 @@ function attachTouch(block: HTMLElement, pf: PageFlip, reduced: boolean) {
         if (Math.abs(dx) > 30) (dx < 0 ? pf.flipNext : pf.flipPrev).call(pf, 'bottom')
       } else {
         const pw = pf.getRender().getRect().pageWidth
-        // A flick, or a drag past a third of the page, finishes the turn:
-        // carry the fold past the spine so the engine completes it.
+        // A flick, or a drag past a third of the page, finishes the turn
+        // from where the fold is; anything less settles back.
         const commit = (elapsed < 300 && Math.abs(dx) > 30) || Math.abs(dx) > pw / 3
-        const end = commit
-          ? { x: origin.x + (dx < 0 ? -2.2 : 2.2) * pw, y: origin.y }
-          : { x: origin.x + dx, y: origin.y }
-        if (commit) pf.userMove(end, true)
-        pf.userStop(end)
+        pf.userStop({ x: origin.x + dx, y: origin.y }, true)
+        releaseFold(pf, commit)
       }
     } else if (lock === null && elapsed < 300 && !isControl(e.target)) {
       // Tap near the outer edge of the visible page turns it.
