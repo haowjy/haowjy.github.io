@@ -554,3 +554,12 @@
   font-size: 3.65cqw;
   padding: 7cqw 7cqw 9cqw;
 }
+
+/* Note descriptions vary in length; keep the Writing page to a fixed rhythm. */
+.pg--writing .pg__text {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
