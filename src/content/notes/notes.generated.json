@@ -29,51 +29,6 @@
     ],
     "readingTime": 6
   },
-  "layered-latent-memory-grafts": {
-    "headings": [
-      {
-        "depth": 2,
-        "text": "The setup",
-        "id": "the-setup"
-      },
-      {
-        "depth": 2,
-        "text": "Retrieval is close to solved",
-        "id": "retrieval-is-close-to-solved"
-      },
-      {
-        "depth": 2,
-        "text": "But the answers are wrong",
-        "id": "but-the-answers-are-wrong"
-      },
-      {
-        "depth": 2,
-        "text": "What that means",
-        "id": "what-that-means"
-      },
-      {
-        "depth": 2,
-        "text": "What didn't run",
-        "id": "what-didnt-run"
-      },
-      {
-        "depth": 2,
-        "text": "The ladder, as untested ideas",
-        "id": "the-ladder-as-untested-ideas"
-      },
-      {
-        "depth": 2,
-        "text": "Code",
-        "id": "code"
-      },
-      {
-        "depth": 2,
-        "text": "References",
-        "id": "references"
-      }
-    ],
-    "readingTime": 5
-  },
   "what-happened-to-my-tokens": {
     "headings": [
       {
