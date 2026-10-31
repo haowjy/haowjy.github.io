@@ -1,0 +1,332 @@
+import { PageFlip } from 'page-flip'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
+import { BOOK_GOTO_EVENT, buildBookPages } from './pages'
+import type { BookPage } from './types'
+
+/**
+ * The homepage book. StPageFlip draws the page turn (corner peel, drag,
+ * curl shadows, rigid covers). It takes ownership of the page elements and
+ * moves them around, so those elements are created here, outside React's
+ * tree, and React renders each page's content into them through a portal.
+ */
+
+type Layout = {
+  mode: 'spread' | 'single'
+  /** Width of the whole book block in px (two pages in spread mode). */
+  width: number
+  pageWidth: number
+  pageHeight: number
+}
+
+/** Page proportions: a trade paperback in spread, a taller sheet on phones. */
+const SPREAD_RATIO = 0.72
+const SINGLE_RATIO = 0.64
+/** Vertical room the controls and top bar need, in px. */
+const CHROME_Y = 150
+
+function computeLayout(vw: number, vh: number): Layout {
+  const availH = Math.max(320, vh - CHROME_Y)
+  const spreadW = Math.min(vw * 0.94, 1240, availH * SPREAD_RATIO * 2)
+  if (spreadW / 2 >= 330) {
+    const pageWidth = Math.floor(spreadW / 2)
+    return {
+      mode: 'spread',
+      width: pageWidth * 2,
+      pageWidth,
+      pageHeight: Math.floor(pageWidth / SPREAD_RATIO),
+    }
+  }
+  const pageWidth = Math.floor(Math.min(vw - 24, availH * SINGLE_RATIO, 520))
+  return {
+    mode: 'single',
+    width: pageWidth,
+    pageWidth,
+    pageHeight: Math.floor(pageWidth / SINGLE_RATIO),
+  }
+}
+
+function useLayout(): Layout {
+  const [layout, setLayout] = useState(() =>
+    computeLayout(window.innerWidth, window.innerHeight),
+  )
+  useEffect(() => {
+    let t: ReturnType<typeof setTimeout> | undefined
+    const onResize = () => {
+      clearTimeout(t)
+      t = setTimeout(() => setLayout(computeLayout(window.innerWidth, window.innerHeight)), 120)
+    }
+    window.addEventListener('resize', onResize)
+    return () => {
+      clearTimeout(t)
+      window.removeEventListener('resize', onResize)
+    }
+  }, [])
+  return layout
+}
+
+function prefersReducedMotion() {
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches
+}
+
+function pageForHash(pages: BookPage[]): number {
+  const hash = window.location.hash.slice(1)
+  if (!hash) return 0
+  const i = pages.findIndex((p) => p.anchor === hash || p.id === hash)
+  return i < 0 ? 0 : i
+}
+
+/** Client-only. Render through `<BookRoute>`, which handles SSR. */
+export default function Book() {
+  const layout = useLayout()
+  const flipRef = useRef<PageFlip | null>(null)
+
+  const pages = useMemo(() => buildBookPages(), [])
+
+  useEffect(() => {
+    const onGoto = (e: Event) => {
+      const page = (e as CustomEvent<number>).detail
+      const pf = flipRef.current
+      if (!pf || typeof page !== 'number') return
+      if (prefersReducedMotion()) pf.turnToPage(page)
+      else pf.flip(page, 'bottom')
+    }
+    // A hash typed or linked while the book is open (#work, #projects…).
+    const onHash = () =>
+      window.dispatchEvent(new CustomEvent(BOOK_GOTO_EVENT, { detail: pageForHash(pages) }))
+    window.addEventListener(BOOK_GOTO_EVENT, onGoto)
+    window.addEventListener('hashchange', onHash)
+    return () => {
+      window.removeEventListener(BOOK_GOTO_EVENT, onGoto)
+      window.removeEventListener('hashchange', onHash)
+    }
+  }, [pages])
+
+  // The orientation and page size are baked into a PageFlip instance, so a
+  // layout change remounts the engine, starting at the page the reader was on.
+  const [current, setCurrent] = useState(() => pageForHash(pages))
+
+  return (
+    <div className="book">
+      <div
+        className="book__stage"
+        style={{
+          width: layout.width,
+          // A closed book sits centered; opening it slides the spine to center.
+          transform:
+            layout.mode === 'spread' && current === 0
+              ? `translateX(${-layout.pageWidth / 2}px)`
+              : layout.mode === 'spread' && current === pages.length - 1
+                ? `translateX(${layout.pageWidth / 2}px)`
+                : undefined,
+        }}
+      >
+        <Engine
+          key={`${layout.mode}-${layout.pageWidth}`}
+          layout={layout}
+          pages={pages}
+          startPage={current}
+          flipRef={flipRef}
+          onFlip={setCurrent}
+        />
+      </div>
+      <Controls
+        pages={pages}
+        current={current}
+        mode={layout.mode}
+        onPrev={() => {
+          const pf = flipRef.current
+          if (!pf) return
+          if (prefersReducedMotion()) pf.turnToPage(Math.max(0, pf.getCurrentPageIndex() - (layout.mode === 'spread' ? 2 : 1)))
+          else pf.flipPrev('bottom')
+        }}
+        onNext={() => {
+          const pf = flipRef.current
+          if (!pf) return
+          if (prefersReducedMotion()) pf.turnToPage(Math.min(pages.length - 1, pf.getCurrentPageIndex() + (layout.mode === 'spread' ? 2 : 1)))
+          else pf.flipNext('bottom')
+        }}
+      />
+    </div>
+  )
+}
+
+function Engine({
+  layout,
+  pages,
+  startPage,
+  flipRef,
+  onFlip,
+}: {
+  layout: Layout
+  pages: BookPage[]
+  startPage: number
+  flipRef: React.MutableRefObject<PageFlip | null>
+  onFlip: (page: number) => void
+}) {
+  const hostRef = useRef<HTMLDivElement>(null)
+  const onFlipRef = useRef(onFlip)
+  useEffect(() => {
+    onFlipRef.current = onFlip
+  })
+
+  // One detached element per page; PageFlip owns their position, React
+  // owns their children.
+  const [els] = useState(() =>
+    pages.map((p) => {
+      const el = document.createElement('div')
+      el.className = `pg${p.hard ? ' pg--hard' : ''} pg--${p.id}`
+      if (p.hard) el.dataset.density = 'hard'
+      el.setAttribute('role', 'group')
+      el.setAttribute('aria-label', p.section)
+      return el
+    }),
+  )
+
+  useEffect(() => {
+    const host = hostRef.current
+    if (!host) return
+    const block = document.createElement('div')
+    block.className = 'book__block'
+    host.appendChild(block)
+    for (const el of els) block.appendChild(el)
+
+    const reduced = prefersReducedMotion()
+    const pf = new PageFlip(block, {
+      width: layout.pageWidth,
+      height: layout.pageHeight,
+      size: 'stretch',
+      minWidth: layout.mode === 'single' ? Math.ceil(layout.pageWidth * 0.6) : 1,
+      maxWidth: 2000,
+      minHeight: 1,
+      maxHeight: 4000,
+      usePortrait: layout.mode === 'single',
+      showCover: true,
+      startPage,
+      drawShadow: true,
+      maxShadowOpacity: 0.45,
+      flippingTime: reduced ? 1 : 900,
+      showPageCorners: !reduced,
+      mobileScrollSupport: true,
+      swipeDistance: 24,
+      autoSize: true,
+    })
+    pf.loadFromHTML(els)
+    pf.on('flip', (e) => onFlipRef.current(e.data))
+    pf.on('init', (e) => onFlipRef.current(e.data.page))
+    flipRef.current = pf
+
+    return () => {
+      flipRef.current = null
+      pf.destroy()
+    }
+    // The engine is rebuilt by remounting (see the key in <Book>).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  return (
+    <div
+      ref={hostRef}
+      className={`book__host book__host--${layout.mode}`}
+      style={{ height: layout.pageHeight }}
+    >
+      {els.map((el, i) =>
+        createPortal(
+          <div className="pg__inner">
+            {pages[i].content}
+            {!pages[i].hard && <span className="pg__folio">{i}</span>}
+          </div>,
+          el,
+          pages[i].id,
+        ),
+      )}
+    </div>
+  )
+}
+
+function Controls({
+  pages,
+  current,
+  mode,
+  onPrev,
+  onNext,
+}: {
+  pages: BookPage[]
+  current: number
+  mode: Layout['mode']
+  onPrev: () => void
+  onNext: () => void
+}) {
+  // Keyboard: arrows turn pages unless the reader is typing somewhere.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.metaKey || e.ctrlKey || e.altKey) return
+      const tag = (e.target as HTMLElement | null)?.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return
+      if (e.key === 'ArrowRight' || e.key === 'PageDown') {
+        e.preventDefault()
+        onNext()
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        e.preventDefault()
+        onPrev()
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onNext, onPrev])
+
+  // Pages on screen. With the cover shown alone, spreads are (1,2), (3,4)…
+  // and the engine may report either page of the pair.
+  const last = pages.length - 1
+  const [lo, hi] =
+    mode === 'spread' && current > 0 && current < last
+      ? current % 2 === 1
+        ? [current, current + 1]
+        : [current - 1, current]
+      : [current, current]
+  const visible = pages.slice(lo, hi + 1)
+  const sectionLabel = [...new Set(visible.map((p) => p.section))].join(' · ')
+
+  // Keep the URL pointed at the section on screen, without a navigation.
+  useEffect(() => {
+    // First section that starts on screen, else the section we're inside.
+    const anchor =
+      pages.slice(lo, hi + 1).find((p) => p.anchor)?.anchor ??
+      pages
+        .slice(0, lo)
+        .reverse()
+        .find((p) => p.anchor)?.anchor
+    const url = anchor && hi > 1 ? `#${anchor}` : window.location.pathname
+    window.history.replaceState(window.history.state, '', url)
+  }, [lo, hi, pages])
+
+  const label =
+    current === 0 ? 'Cover' : current === last ? 'Back' : lo === hi ? String(lo) : `${lo}–${hi}`
+
+  return (
+    <div className="book__controls">
+      <button
+        type="button"
+        className="book__btn"
+        onClick={onPrev}
+        disabled={current === 0}
+        aria-label="Previous page"
+      >
+        ←
+      </button>
+      <p className="book__status" aria-live="polite">
+        <span className="book__section">{sectionLabel}</span>
+        <span className="book__folio">{label}</span>
+      </p>
+      <button
+        type="button"
+        className="book__btn"
+        onClick={onNext}
+        disabled={current >= last}
+        aria-label="Next page"
+      >
+        →
+      </button>
+    </div>
+  )
+}

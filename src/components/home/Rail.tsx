@@ -1,3 +1,4 @@
+import { Link } from 'react-router'
 import ThemeToggle from '@/components/ui/ThemeToggle'
 import { author, externalLinks, resumePdfHref } from '@/content/site'
 import { useScrollSpy } from '@/hooks/useScrollSpy'
@@ -58,6 +59,9 @@ export default function Rail({ sections }: { sections: RailSection[] }) {
             </a>
           </li>
         ))}
+        <li>
+          <Link to="/">The book</Link>
+        </li>
         <li>
           <a href={resumePdfHref} target="_blank" rel="noreferrer">
             Résumé <span className="rail__pdf">PDF</span>

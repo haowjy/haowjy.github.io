@@ -8,15 +8,28 @@ The interface earns attention through type and restraint, not mechanics.
 
 ## Direction
 
-**An index, not a manuscript.** One scrolling page in two columns:
+**A book you turn by hand.** The homepage (`/`) is a closed book on a
+desk. Grab a corner and the sheet peels and curls over with real
+shading; the covers and endpapers swing as rigid boards. Click a page
+edge, swipe, or press ← → to turn one spread; the contents page jumps.
+The closed book sits centered and slides so the spine is centered when
+it opens. Two-page spreads on wide screens, one page at a time on
+phones. Page type is set in container units, so a page reads the same at
+any size, and every page is checked to fit.
 
-- **Rail** (left, sticky on ≥960px): name, a one-sentence lede, section
-  nav with scroll-spy, outbound links, theme toggle. On narrow screens it
-  collapses into the intro block at the top.
-- **Sheet** (right): About, Work, Projects, Research & open source,
-  Writing. Every section uses the same entry row: a mono date column and
-  a body (title, one sentence, optional highlights). Repetition is the
-  layout system.
+The turn is drawn by StPageFlip (`page-flip`). It moves page elements
+around itself, so `components/book/Book.tsx` creates them outside React
+and renders each page's content into them with portals. The engine is
+rebuilt (at the same page) when the layout crosses orientation or size.
+Reduced motion turns pages instantly. The URL hash follows the section
+on screen (`/#work`, `/#projects`) and opens the book there.
+
+Without JS (and in the prerendered HTML) the same pages render as plain
+stacked sheets.
+
+**Plain view** (`/plain`): the same content as one scrolling index, a
+sticky rail plus a sheet of entries, for skimming and for anyone who
+doesn't want a book.
 
 **Notes reader.** A sticky top bar, a serif reading column (~40rem), and
 a contents list in the left margin with scroll-spy on ≥1180px. Below
@@ -74,7 +87,7 @@ Tried and removed:
 | Tagline ("Systems, context, and careful numbers.") | Manifesto-as-decoration. The work speaks |
 | Open Source section listing small fixes | If a contribution doesn't earn its space, it costs space |
 | Horizontal rules between project/resume rows | Typography already segments them |
-| Paper-pages manuscript with scroll-driven page turns (2026-05 → 2026-10) | The mechanic was the content. Scroll hijacking, pagination math, and an 85vh page made a résumé hard to skim and impossible to link into |
+| Scroll-scrubbed page turns (2026-05 → 2026-10) | Scroll hijacking: 200vh of scrolling per page, pages could rest half-turned, and the turn was a flat rotation, not a page. Replaced by a hand-turned book |
 | Article reading-progress bar | Flourish that nobody notices working but creates a visible line at rest |
 | Email in the footer | Public mailto = scrape bait. GitHub/LinkedIn/X cover legitimate inbound |
 

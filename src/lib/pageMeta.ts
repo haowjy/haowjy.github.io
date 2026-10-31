@@ -166,5 +166,5 @@ export function renderPageMetaTags(meta: PageMeta): string {
 }
 
 export function getPrerenderRoutes(): string[] {
-  return ['/', '/notes', ...posts.map((post) => `/notes/${post.slug}`)]
+  return ['/', '/plain', '/notes', ...posts.map((post) => `/notes/${post.slug}`)]
 }

@@ -6,6 +6,7 @@
 @import './tokens/layout.css';
 @import './tokens/tailwind.css';
 @import './notes/index.css';
+@import './book.css';
 
 /* ---------- Base ---------------------------------------------------- */
 

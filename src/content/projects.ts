@@ -20,7 +20,7 @@ export const projects: Project[] = [
     name: 'Meridian CLI',
     when: 'Feb 2026 – now',
     description:
-      'A harness-agnostic CLI that launches and tracks specialist agents across Claude Code, Codex, OpenCode, Cursor, and Pi, with session forking, recursive delegation, and a file-based memory system for long-running agents.',
+      'Launches and tracks specialist agents across Claude Code, Codex, OpenCode, Cursor, and Pi, with session forking, recursive delegation, and file-based memory for long-running agents.',
     stack: ['Python', 'TypeScript', 'MCP'],
     starSource: { repo: 'haowjy/meridian-cli', fallback: 30 },
     links: [{ label: 'GitHub', href: 'https://github.com/haowjy/meridian-cli' }],
@@ -29,7 +29,7 @@ export const projects: Project[] = [
     name: 'Mars Agents',
     when: 'Mar 2026 – now',
     description:
-      'A package manager for agents, skills, and hooks. Resolves packages from a lockfile and compiles harness-native configuration, with sync that never deletes files it did not create.',
+      'A package manager for agents, skills, and hooks: resolves a lockfile, compiles harness-native configuration, and never deletes files it did not create.',
     stack: ['Rust'],
     starSource: { repo: 'haowjy/mars-agents', fallback: 6 },
     links: [{ label: 'GitHub', href: 'https://github.com/haowjy/mars-agents' }],
