@@ -1,5 +1,6 @@
 :root {
-  --content-max: 1100px;
-  --header-height: 4rem;
-  --gutter: 2.5rem;
+  --page-max: 1180px;
+  --gutter: clamp(1.25rem, 4vw, 3rem);
+  --topbar-height: 3.5rem;
+  --measure: 40rem;
 }

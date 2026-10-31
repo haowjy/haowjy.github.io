@@ -9,11 +9,14 @@ const templatePath = path.join(distDir, 'index.html')
 const serverEntryPath = path.join(ssrDistDir, 'entry-server.js')
 
 const template = readFileSync(templatePath, 'utf8')
-const { getNotesPrerenderRoutes, renderPage } = await import(
+const { getPrerenderRoutes, renderPage } = await import(
   pathToFileURL(serverEntryPath).href
 )
 
-for (const route of getNotesPrerenderRoutes()) {
+// The SPA shell doubles as the 404 page; copy it before "/" overwrites it.
+cpSync(templatePath, path.join(distDir, '404.html'))
+
+for (const route of getPrerenderRoutes()) {
   const { appHtml, headTags } = renderPage(route)
   const pageHtml = injectPage(template, appHtml, headTags)
   const outputPath = toOutputPath(route)
@@ -21,7 +24,6 @@ for (const route of getNotesPrerenderRoutes()) {
   writeFileSync(outputPath, pageHtml)
 }
 
-cpSync(templatePath, path.join(distDir, '404.html'))
 rmSync(ssrDistDir, { recursive: true, force: true })
 
 function injectPage(htmlTemplate, appHtml, headTags) {

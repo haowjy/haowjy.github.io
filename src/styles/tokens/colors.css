@@ -1,47 +1,54 @@
+/*
+ * Semantic color tokens. Names are stable; values are the design.
+ * Light: cool off-white paper, near-black ink, one vermilion accent.
+ * Dark: warm charcoal, bone ink, the accent lifted for contrast.
+ */
 :root {
   color-scheme: light;
 
-  --paper: #f2ebd8;
-  --paper-edge: #e9dfc6;
-  --paper-deep: #dccfb0;
-  --paper-veil: #f2ebd8c0;
+  --paper: #f6f5f1;
+  --paper-edge: #efede7;
+  --paper-deep: #e6e3da;
+  --paper-veil: #f6f5f1d9;
 
-  --ink: #14110f;
-  --ink-soft: #2b2722;
-  --ink-mute: #6f6759;
-  --ink-fade: #a99f8a;
+  --ink: #151413;
+  --ink-soft: #3a3835;
+  --ink-mute: #6e6a63;
+  --ink-fade: #a6a199;
 
-  --jade: #1f665e;
-  --jade-deep: #143f3a;
-  --jade-bright: #2e8c82;
-  --jade-soft: #7db8b0;
-  --jade-veil: #1f665e14;
+  --accent: #c2410c;
+  --accent-deep: #9a3412;
+  --accent-bright: #ea580c;
+  --accent-soft: #f2b28f;
+  --accent-veil: #c2410c12;
 
-  --amber: #b57823;
-  --amber-deep: #8a5916;
+  --amber: #b45309;
+  --amber-deep: #8a4106;
 
-  --gold: #eac54f;
+  --gold: #d4a72c;
 }
 
 [data-theme='dark'] {
   color-scheme: dark;
 
-  --paper: #0e0d0b;
-  --paper-edge: #161412;
-  --paper-deep: #1f1c18;
-  --paper-veil: #0e0d0bc0;
+  --paper: #141312;
+  --paper-edge: #1b1a18;
+  --paper-deep: #24221f;
+  --paper-veil: #141312d9;
 
-  --ink: #ece3cd;
-  --ink-soft: #c8bfa9;
-  --ink-mute: #8c8472;
-  --ink-fade: #4a453b;
+  --ink: #ecebe6;
+  --ink-soft: #c9c6bf;
+  --ink-mute: #8f8b83;
+  --ink-fade: #57534d;
 
-  --jade: #5fb5ab;
-  --jade-deep: #3f8a82;
-  --jade-bright: #8dd4cb;
-  --jade-soft: #2e5f5a;
-  --jade-veil: #5fb5ab1a;
+  --accent: #fb7a45;
+  --accent-deep: #f05f22;
+  --accent-bright: #fda57f;
+  --accent-soft: #7c3415;
+  --accent-veil: #fb7a4516;
 
-  --amber: #e0a23e;
-  --amber-deep: #b8821f;
+  --amber: #f0b44a;
+  --amber-deep: #d59522;
+
+  --gold: #e3b341;
 }

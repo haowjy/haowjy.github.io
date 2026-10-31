@@ -6,22 +6,21 @@
   "scripts": {
     "predev": "node scripts/extract-note-meta.mjs",
     "dev": "vite",
-    "build": "node scripts/extract-note-meta.mjs && tsc -b && vite build && vite build --ssr src/entry-server.tsx --outDir dist-ssr && node scripts/prerender-notes.mjs",
+    "build": "node scripts/extract-note-meta.mjs && tsc -b && vite build && vite build --ssr src/entry-server.tsx --outDir dist-ssr && node scripts/prerender.mjs",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@fontsource-variable/instrument-sans": "^5.3.0",
     "@fontsource-variable/jetbrains-mono": "^5.2.8",
-    "@fontsource/dm-serif-display": "^5.2.8",
-    "@fontsource/ibm-plex-sans": "^5.2.8",
+    "@fontsource-variable/newsreader": "^5.3.0",
     "@mdx-js/react": "^3.1.1",
     "@mdx-js/rollup": "^3.1.1",
     "@observablehq/plot": "^0.6.17",
     "@tailwindcss/vite": "^4.3.0",
     "gray-matter": "^4.0.3",
-    "motion": "^12.38.0",
+    "page-flip": "^2.0.7",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "react-router": "^7.15.0",
@@ -47,7 +46,6 @@
     "globals": "^17.5.0",
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.58.2",
-    "vite": "^8.0.10",
-    "vitest": "^4.1.5"
+    "vite": "^8.0.10"
   }
 }

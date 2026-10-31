@@ -1,25 +1,27 @@
 :root {
-  --type-display-xxl: clamp(5rem, 12vw + 1rem, 14rem);
-  --type-display-xl: clamp(4rem, 8vw + 1rem, 9rem);
-  --type-display-l: clamp(3rem, 4.5vw + 1rem, 5rem);
-  --type-display-m: clamp(2rem, 2vw + 1rem, 2.75rem);
+  --type-display-xl: clamp(2.75rem, 3.2vw + 1.6rem, 4.25rem);
+  --type-display-l: clamp(2.25rem, 2.6vw + 1.3rem, 3.4rem);
+  --type-display-m: clamp(1.6rem, 1vw + 1.2rem, 2rem);
   --type-h2: 1.5rem;
   --type-h3: 1.125rem;
-  --type-body: 1.0625rem;
+  --type-body: 1rem;
   --type-body-s: 0.9375rem;
   --type-meta: 0.8125rem;
   --type-micro: 0.6875rem;
+  --type-read: clamp(1.125rem, 0.25vw + 1.05rem, 1.25rem);
 
-  --leading-tight: 1.05;
+  --leading-tight: 1.04;
   --leading-snug: 1.25;
   --leading-body: 1.55;
+  --leading-read: 1.62;
   --leading-loose: 1.7;
 
-  --tracking-display: -0.025em;
-  --tracking-tight: -0.005em;
-  --tracking-meta: 0.01em;
+  --tracking-display: -0.022em;
+  --tracking-tight: -0.008em;
+  --tracking-meta: 0.02em;
 
-  --font-display: 'DM Serif Display', serif;
-  --font-body: 'IBM Plex Sans', sans-serif;
-  --font-mono: 'JetBrains Mono Variable', 'JetBrains Mono', monospace;
+  --font-display: 'Newsreader Variable', 'Newsreader', Georgia, serif;
+  --font-read: 'Newsreader Variable', 'Newsreader', Georgia, serif;
+  --font-body: 'Instrument Sans Variable', 'Instrument Sans', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, monospace;
 }

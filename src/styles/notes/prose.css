@@ -1,12 +1,26 @@
 /* Notes prose — full GFM typography under .note-prose */
 
 .notes-reader .note-prose {
-  max-width: 68ch;
-  margin: 0 auto;
-  font-family: var(--font-body);
-  font-size: var(--type-body);
-  line-height: var(--leading-body);
+  font-family: var(--font-read);
+  font-size: var(--type-read);
+  font-variation-settings: 'opsz' 16;
+  line-height: var(--leading-read);
   color: var(--ink);
+  hanging-punctuation: first;
+  text-wrap: pretty;
+  font-feature-settings: 'kern', 'liga', 'onum';
+}
+
+.notes-reader .note-prose .viz-callout {
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+/* UI-ish blocks inside prose stay in the sans with lining figures. */
+.notes-reader .note-prose table,
+.notes-reader .note-prose [class^='viz-'] {
+  font-family: var(--font-body);
+  font-feature-settings: 'kern', 'lnum', 'tnum';
 }
 
 .notes-reader .note-prose > * {
@@ -14,7 +28,7 @@
 }
 
 .notes-reader .note-prose > * + * {
-  margin-top: 1.25rem;
+  margin-top: 1.15em;
 }
 
 /* Hide redundant MDX h1 that duplicates frontmatter title */
@@ -32,21 +46,23 @@
 .notes-reader .note-prose h3,
 .notes-reader .note-prose h4 {
   font-family: var(--font-display);
-  font-weight: 400;
+  font-weight: 500;
+  font-variation-settings: 'opsz' 36;
   line-height: var(--leading-snug);
-  letter-spacing: var(--tracking-tight);
+  letter-spacing: -0.012em;
   color: var(--ink);
-  scroll-margin-top: calc(var(--header-height) + 1.25rem);
+  text-wrap: balance;
+  scroll-margin-top: calc(var(--topbar-height) + 1.5rem);
 }
 
 .notes-reader .note-prose h2 {
-  margin-top: clamp(2.25rem, 4vw, 3rem);
-  font-size: clamp(1.55rem, 0.9vw + 1.1rem, 2rem);
+  margin-top: 2.4em;
+  font-size: clamp(1.5rem, 0.8vw + 1.15rem, 1.85rem);
 }
 
 .notes-reader .note-prose h3 {
-  margin-top: clamp(1.75rem, 3vw, 2.25rem);
-  font-size: clamp(1.2rem, 0.5vw + 1rem, 1.4rem);
+  margin-top: 1.9em;
+  font-size: clamp(1.2rem, 0.4vw + 1.05rem, 1.35rem);
 }
 
 .notes-reader .note-prose h4 {
@@ -56,8 +72,8 @@
 
 /* Links */
 .notes-reader .note-prose a {
-  color: var(--jade);
-  text-decoration-color: color-mix(in srgb, var(--jade) 60%, transparent);
+  color: inherit;
+  text-decoration-color: color-mix(in srgb, var(--accent) 70%, transparent);
   text-decoration-thickness: 1px;
   text-underline-offset: 0.25em;
   transition: color 160ms ease, text-decoration-thickness 160ms ease;
@@ -65,15 +81,15 @@
 
 .notes-reader .note-prose a:hover,
 .notes-reader .note-prose a:focus-visible {
-  color: var(--jade-deep);
-  text-decoration-color: var(--jade-deep);
+  color: var(--accent);
+  text-decoration-color: var(--accent);
   text-decoration-thickness: 2px;
 }
 
 [data-theme='dark'] .notes-reader .note-prose a:hover,
 [data-theme='dark'] .notes-reader .note-prose a:focus-visible {
-  color: var(--jade-bright);
-  text-decoration-color: var(--jade-bright);
+  color: var(--accent-bright);
+  text-decoration-color: var(--accent-bright);
 }
 
 /* Blockquote */
@@ -122,7 +138,7 @@
 
 .notes-reader .note-prose li.task-list-item input[type='checkbox'] {
   margin-top: 0.35rem;
-  accent-color: var(--jade);
+  accent-color: var(--accent);
 }
 
 /* Tables (GFM) */
@@ -131,6 +147,7 @@
   border-collapse: collapse;
   font-size: var(--type-body-s);
   line-height: 1.45;
+  font-variant-numeric: tabular-nums;
 }
 
 .notes-reader .note-prose th,
@@ -178,7 +195,7 @@
 /* Inline code */
 .notes-reader .note-prose :not(pre) > code {
   font-family: var(--font-mono);
-  font-size: 0.9em;
+  font-size: 0.8em;
   background-color: var(--paper-edge);
   border: 1px solid var(--rule);
   padding: 0.08rem 0.35rem;
@@ -193,8 +210,8 @@
   border: 1px solid var(--rule);
   border-radius: 2px;
   overflow-x: auto;
-  font-size: 0.88rem;
-  line-height: 1.55;
+  font-size: 0.82rem;
+  line-height: 1.6;
 }
 
 .notes-reader .note-prose pre code {
