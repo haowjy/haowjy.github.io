@@ -2,77 +2,54 @@
 
 ## Purpose
 
-Capability demo first, personal site second. A visitor should leave with
-two impressions: that this person can build polished, distinctive
-interfaces, and that this person did real work worth knowing about.
-Generic content with ambitious mechanics is a tech demo. Ambitious
-content with no mechanics is a resume. Both at once is the point.
+A visitor should be able to answer "who is this and what have they built"
+in one screen, then go as deep as they want without switching modes.
+The interface earns attention through type and restraint, not mechanics.
 
 ## Direction
 
-**Paper-pages manuscript that turns.** Discrete pages, page-number
-footers, paper-toned canvas, multi-layer drop shadow, paper-tooth noise.
-Scrolling fans through the manuscript: pages curl and turn at the corner
-as scroll progresses, revealing the page beneath. Pages 2-3-4 stack
-visibly behind the current page so the manuscript reads as finite from
-the first frame.
+**An index, not a manuscript.** One scrolling page in two columns:
 
-Typography, rhythm, and the page mechanics do the work. No chrome on top.
+- **Rail** (left, sticky on ≥960px): name, a one-sentence lede, section
+  nav with scroll-spy, outbound links, theme toggle. On narrow screens it
+  collapses into the intro block at the top.
+- **Sheet** (right): About, Work, Projects, Research & open source,
+  Writing. Every section uses the same entry row: a mono date column and
+  a body (title, one sentence, optional highlights). Repetition is the
+  layout system.
 
-### Page mechanics
+**Notes reader.** A sticky top bar, a serif reading column (~40rem), and
+a contents list in the left margin with scroll-spy on ≥1180px. Below
+that the contents collapse into a `<details>` above the body. Draft
+status is shown, not hidden.
 
-- **Page size.** ~85vh. Stacked pages behind remain visible at the
-  edges. Scales on mobile, keeps the same mechanic.
-- **Scroll-driven flip.** Continuous corner curl tracks scroll progress.
-  The current page lifts at the corner and casts shadow on the page
-  beneath. Not snap-to-flip.
-- **Dynamic pagination.** List sections (projects, resume) overflow
-  into additional pages when content doesn't fit one page. The
-  manuscript grows page by page as content is added. Resizing
-  re-paginates live.
-- **Writing on home does not paginate.** Stays a curated cut (3-5 recent
-  posts) on a single page. `All notes →` routes to `/notes`. The
-  archive lives at `/notes`; the homepage is the highlight reel.
-- **Contents spine.** Persistent nav at the right edge (desktop) or
-  bottom bar (mobile): page numbers, section labels, current page
-  highlighted. Click an entry → fast-flip through intervening pages
-  in ~300ms total, lands on target. PDF resume link included.
-- **Reduced-motion.** Snap-to-page, no progressive curl. Stack-behind
-  effect preserved. Honors `prefers-reduced-motion: reduce`.
+Every route is prerendered (`scripts/prerender.mjs`) and hydrates; the
+theme is set by an inline script before first paint.
 
 ### Type system
 
-Roles, not specific families. Generic system stacks (Inter, Roboto,
-Arial) are out.
-
 | Role | Use | Current |
 |---|---|---|
-| Display | Section titles, post headlines | DM Serif Display |
-| Body | All running prose | IBM Plex Sans |
-| Mono | Eyebrow meta, dates, page numbers, link rails | JetBrains Mono |
+| Display / reading | Name, titles, About prose, note body | Newsreader (variable, optical size) |
+| UI | Entries, nav, captions, charts | Instrument Sans |
+| Mono | Dates, section labels, stack lists | JetBrains Mono |
 
-Light and dark themes share token names; dark overrides values.
-Components do not fork. Notes uses the same stack as the manuscript.
+Light and dark share token names; dark overrides values.
 
 ### Color tokens
 
-Semantic names are stable; specific values are open to revision. Defined
-in `src/styles/tokens/colors.css`:
+Defined in `src/styles/tokens/colors.css`:
 
-- `--paper`, `--paper-edge` — page surface, slightly differentiated for
-  cards
-- `--ink`, `--ink-soft`, `--ink-mute` — three text levels
-- `--jade`, `--jade-deep`, `--jade-veil` — accent green; deep for hover,
-  veil for hover-tinted backgrounds
-- `--amber`, `--gold` — sparing; `--gold` (`#eac54f`) reserved for the
-  GitHub star icon to match GH's own
-- `--rule`, `--rule-strong` — borders and underlines
+- `--paper`, `--paper-edge`, `--paper-deep` — surfaces
+- `--ink`, `--ink-soft`, `--ink-mute`, `--ink-fade` — four text levels
+- `--accent` (vermilion) and its `-deep`/`-bright`/`-soft`/`-veil` steps.
+  One accent, used for hover, the active nav tick, and the highlighted
+  value in charts
+- `--amber` — second chart color; `--gold` — GitHub star icon only
+- `--rule`, `--rule-strong` — borders
 
-### Page shadow
-
-`--page-shadow` is a three-layer drop shadow tuned for "lift off the
-page" without sticker-edge. Light and dark have separate values; dark
-needs deeper alphas to register on a near-black background.
+Charts (`tokens/charts.css`) draw neutral bars and reserve the accent for
+the value the text is about.
 
 ## Cuts
 
@@ -97,10 +74,15 @@ Tried and removed:
 | Tagline ("Systems, context, and careful numbers.") | Manifesto-as-decoration. The work speaks |
 | Open Source section listing small fixes | If a contribution doesn't earn its space, it costs space |
 | Horizontal rules between project/resume rows | Typography already segments them |
+| Paper-pages manuscript with scroll-driven page turns (2026-05 → 2026-10) | The mechanic was the content. Scroll hijacking, pagination math, and an 85vh page made a résumé hard to skim and impossible to link into |
 | Article reading-progress bar | Flourish that nobody notices working but creates a visible line at rest |
 | Email in the footer | Public mailto = scrape bait. GitHub/LinkedIn/X cover legitimate inbound |
 
 ## Content principles
+
+- **The resume repo is the source.** `src/content/resume.ts` and
+  `projects.ts` trace to `resume-1.tex` / `resume-master.tex` in
+  `haowjy/resume`. Update the master first, then the site.
 
 - **Real data only.** GitHub stars fetched live (1h localStorage cache,
   hardcoded fallbacks for offline / failure). The PDF resume is source

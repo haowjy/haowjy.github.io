@@ -5,7 +5,7 @@ type ComparisonSide = {
   value: ReactNode
   label: ReactNode
   sublabel?: ReactNode
-  tone?: 'jade' | 'amber' | 'ink'
+  tone?: 'accent' | 'amber' | 'ink'
 }
 
 type ComparisonBlockProps = {

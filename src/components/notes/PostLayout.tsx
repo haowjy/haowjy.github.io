@@ -1,35 +1,27 @@
 import type { PropsWithChildren } from 'react'
 import { Link } from 'react-router'
+import { formatDate } from '@/lib/formatDate'
+import SiteFooter from '@/components/layout/SiteFooter'
+import Topbar from '@/components/layout/Topbar'
 import NoteToc from '@/components/notes/NoteToc'
-import TechBadge from '@/components/ui/TechBadge'
 import type { TocHeading } from '@/lib/noteHeadings'
 import type { PostFrontmatter } from '@/types/post'
 
-type Neighbor = {
-  slug: string
-  title: string
-} | null
+type Neighbor = { slug: string; title: string } | undefined
 
 type PostLayoutProps = PropsWithChildren<{
   post: PostFrontmatter
   headings?: TocHeading[]
-  /** Older post in chronological order (rendered as "previous"). */
+  /** Older post. */
   prev?: Neighbor
-  /** Newer post in chronological order (rendered as "next"). */
+  /** Newer post. */
   next?: Neighbor
 }>
 
 /**
- * Single bound page — the post as one continuous chapter of the manuscript.
- *
- * Header carries a "← writing" return link, the dateline, and reading
- * time. The title sits in display serif beneath; the dek lives between
- * rule lines as an italic serif standfirst; tag pills sit under the dek.
- * The body inherits the manuscript's type system through `.post-layout__body`
- * (see prose.css), including a jade drop cap on the first paragraph and
- * serif italic blockquotes.
- *
- * The footer closes the page with prev/index/next nav plus a date colophon.
+ * The note reader: one serif reading column, a sticky contents list in the
+ * left margin on wide screens, and figures allowed to run wider than the
+ * text. `.notes-reader .note-prose` scopes prose.css and viz.css.
  */
 export default function PostLayout({
   post,
@@ -39,118 +31,69 @@ export default function PostLayout({
   children,
 }: PostLayoutProps) {
   return (
-    <article className="post-layout notes-reader">
-      <div className="post-layout__page paper-noise">
-        <header className="post-layout__header">
-          <Link to="/notes" className="post-layout__back">
-            <span aria-hidden="true" className="post-layout__back-arrow">
-              <svg
-                viewBox="0 0 16 16"
-                width="1em"
-                height="1em"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M13 8H3M7 4 3 8l4 4" />
-              </svg>
-            </span>
-            <span className="post-layout__back-label">← Notes</span>
-          </Link>
-
-          <p className="post-layout__eyebrow">
-            {post.date && <span>{post.date}</span>}
-            {post.readingTime != null && post.readingTime > 0 && (
-              <>
-                {post.date && <span aria-hidden="true">·</span>}
-                <span>{post.readingTime} min read</span>
-              </>
-            )}
-          </p>
-
-          <h1>{post.title}</h1>
-
-          {(post.description || post.pullQuote) && (
-            <p className="post-layout__dek">
-              {post.description ?? post.pullQuote}
+    <>
+      <Topbar />
+      <main id="main" className="reader notes-reader">
+        <article className="reader__article">
+          <header className="reader__head">
+            <p className="reader__meta">
+              <Link to="/notes">Notes</Link>
+              {post.date && (
+                <>
+                  <span aria-hidden="true">/</span>
+                  <time dateTime={post.date}>{formatDate(post.date)}</time>
+                </>
+              )}
+              {post.readingTime != null && post.readingTime > 0 && (
+                <>
+                  <span aria-hidden="true">·</span>
+                  <span>{post.readingTime} min read</span>
+                </>
+              )}
+              {post.draft && <span className="draft-tag">Draft</span>}
             </p>
-          )}
+            <h1 className="reader__title">{post.title}</h1>
+            {(post.description || post.pullQuote) && (
+              <p className="reader__dek">{post.description ?? post.pullQuote}</p>
+            )}
+          </header>
 
-          {post.tags.length > 0 && (
-            <div className="post-layout__tags" aria-label="Tags">
-              {post.tags.map((tag) => (
-                <TechBadge key={tag} label={tag} />
-              ))}
+          <div className="reader__grid">
+            <aside className="reader__margin">
+              <NoteToc headings={headings} variant="margin" />
+            </aside>
+            <div className="reader__column">
+              <NoteToc headings={headings} variant="inline" />
+              <div className="note-prose">{children}</div>
             </div>
-          )}
-        </header>
-
-        <NoteToc headings={headings} />
-
-        <div className="note-prose">{children}</div>
-
-        <footer className="post-layout__footer">
-          <nav className="post-layout__nav" aria-label="Post navigation">
-            {prev ? (
-              <Link
-                to={`/notes/${prev.slug}`}
-                className="post-layout__nav-link post-layout__nav-link--prev"
-              >
-                <span className="post-layout__nav-arrow" aria-hidden="true">
-                  ◀
-                </span>
-                <span className="post-layout__nav-stack">
-                  <span className="post-layout__nav-label">previous</span>
-                  <span className="post-layout__nav-title">{prev.title}</span>
-                </span>
-              </Link>
-            ) : (
-              <span className="post-layout__nav-link post-layout__nav-link--empty">
-                <span className="post-layout__nav-stack">
-                  <span className="post-layout__nav-label">previous</span>
-                </span>
-              </span>
-            )}
-
-            <Link to="/notes" className="post-layout__nav-index">
-              <span className="post-layout__nav-label">All notes</span>
-            </Link>
-
-            {next ? (
-              <Link
-                to={`/notes/${next.slug}`}
-                className="post-layout__nav-link post-layout__nav-link--next"
-              >
-                <span className="post-layout__nav-stack">
-                  <span className="post-layout__nav-label">next</span>
-                  <span className="post-layout__nav-title">{next.title}</span>
-                </span>
-                <span className="post-layout__nav-arrow" aria-hidden="true">
-                  ▶
-                </span>
-              </Link>
-            ) : (
-              <span className="post-layout__nav-link post-layout__nav-link--empty">
-                <span className="post-layout__nav-stack">
-                  <span className="post-layout__nav-label">next</span>
-                </span>
-              </span>
-            )}
-          </nav>
-
-          <div className="post-layout__colophon">
-            {post.date && <span>{post.date}</span>}
-            {post.date && post.readingTime != null && post.readingTime > 0 && (
-              <span aria-hidden="true">·</span>
-            )}
-            {post.readingTime != null && post.readingTime > 0 && (
-              <span>{post.readingTime} min read</span>
-            )}
           </div>
-        </footer>
-      </div>
-    </article>
+
+          {(prev || next) && (
+            <nav className="reader__pager" aria-label="More notes">
+              {prev ? (
+                <Link to={`/notes/${prev.slug}`} className="reader__pager-link">
+                  <span className="reader__pager-label">Older</span>
+                  <span className="reader__pager-title">{prev.title}</span>
+                </Link>
+              ) : (
+                <span />
+              )}
+              {next ? (
+                <Link
+                  to={`/notes/${next.slug}`}
+                  className="reader__pager-link reader__pager-link--next"
+                >
+                  <span className="reader__pager-label">Newer</span>
+                  <span className="reader__pager-title">{next.title}</span>
+                </Link>
+              ) : (
+                <span />
+              )}
+            </nav>
+          )}
+        </article>
+        <SiteFooter />
+      </main>
+    </>
   )
 }

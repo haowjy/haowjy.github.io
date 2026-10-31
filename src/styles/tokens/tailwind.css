@@ -17,11 +17,11 @@
   --color-ink-mute: var(--ink-mute);
   --color-ink-fade: var(--ink-fade);
 
-  --color-jade: var(--jade);
-  --color-jade-deep: var(--jade-deep);
-  --color-jade-bright: var(--jade-bright);
-  --color-jade-soft: var(--jade-soft);
-  --color-jade-veil: var(--jade-veil);
+  --color-accent: var(--accent);
+  --color-accent-deep: var(--accent-deep);
+  --color-accent-bright: var(--accent-bright);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-veil: var(--accent-veil);
 
   --color-amber: var(--amber);
   --color-amber-deep: var(--amber-deep);
@@ -32,8 +32,8 @@
   --font-display: var(--font-display);
   --font-body: var(--font-body);
   --font-mono: var(--font-mono);
+  --font-read: var(--font-read);
 
-  --text-display-xxl: var(--type-display-xxl);
   --text-display-xl: var(--type-display-xl);
   --text-display-l: var(--type-display-l);
   --text-display-m: var(--type-display-m);

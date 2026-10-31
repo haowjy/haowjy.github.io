@@ -1,15 +1,9 @@
-:root {
-  --chart-1: var(--jade);
-  --chart-2: var(--jade-soft);
-  --chart-peak: var(--amber);
-  --chart-mute: var(--ink-fade);
-  --chart-track: var(--paper-deep);
-}
-
+/* Neutral bars, accent for the value the reader should look at. */
+:root,
 [data-theme='dark'] {
-  --chart-1: var(--jade);
-  --chart-2: var(--jade-bright);
-  --chart-peak: var(--amber);
+  --chart-1: var(--ink-soft);
+  --chart-2: var(--ink-mute);
+  --chart-peak: var(--accent);
   --chart-mute: var(--ink-fade);
   --chart-track: var(--paper-deep);
 }

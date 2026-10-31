@@ -118,8 +118,8 @@
   display: none;
 }
 
-.notes-reader .note-prose .viz-comparison__side--jade .viz-comparison__value {
-  color: var(--jade);
+.notes-reader .note-prose .viz-comparison__side--accent .viz-comparison__value {
+  color: var(--accent);
 }
 
 .notes-reader .note-prose .viz-comparison__side--amber .viz-comparison__value {
@@ -144,8 +144,8 @@
 }
 
 .notes-reader .note-prose .viz-callout--insight {
-  border-left-color: color-mix(in srgb, var(--jade) 45%, var(--rule-strong));
-  background-color: color-mix(in srgb, var(--jade) 5%, var(--paper));
+  border-left-color: color-mix(in srgb, var(--accent) 45%, var(--rule-strong));
+  background-color: color-mix(in srgb, var(--accent) 5%, var(--paper));
 }
 
 .notes-reader .note-prose .viz-callout__eyebrow,
@@ -299,7 +299,7 @@
 }
 
 .notes-reader .note-prose .viz-workspace-cache__step--cache .viz-workspace-cache__step-result {
-  color: var(--jade);
+  color: var(--accent);
 }
 
 .notes-reader .note-prose .viz-workspace-cache__step-label {
@@ -365,7 +365,7 @@
 }
 
 .notes-reader .note-prose .viz-workspace-cache__sheet--memory .viz-workspace-cache__sheet-line {
-  color: var(--jade);
+  color: var(--accent);
 }
 
 .notes-reader .note-prose .viz-workspace-cache__note {

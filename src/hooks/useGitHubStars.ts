@@ -35,37 +35,43 @@ function writeCache(repo: string, count: number) {
 }
 
 export function useGitHubStars(source: StarSource | null): StarsState {
-  const [state, setState] = useState<StarsState>(() => {
-    if (!source) return { stars: null, loading: false, fromFallback: false }
-    const cached = typeof window !== 'undefined' ? readCache(source.repo) : null
-    return {
-      stars: cached?.count ?? source.fallback,
-      loading: false,
-      fromFallback: !cached,
-    }
-  })
+  // Start from the fallback on both server and client so the prerendered
+  // HTML hydrates cleanly; the cache and the live count land after mount.
+  const [state, setState] = useState<StarsState>(() => ({
+    stars: source?.fallback ?? null,
+    loading: false,
+    fromFallback: source != null,
+  }))
+
+  const repo = source?.repo
 
   useEffect(() => {
-    if (!source) return
-    const cached = readCache(source.repo)
-    const fresh = cached && Date.now() - cached.fetchedAt < TTL_MS
-    if (fresh) return
-
+    if (!repo) return
     const ctrl = new AbortController()
-    fetch(`https://api.github.com/repos/${source.repo}`, { signal: ctrl.signal })
+    const cached = readCache(repo)
+    // Apply the cached count after hydration, not during it.
+    if (cached) {
+      queueMicrotask(() => {
+        if (!ctrl.signal.aborted)
+          setState({ stars: cached.count, loading: false, fromFallback: false })
+      })
+      if (Date.now() - cached.fetchedAt < TTL_MS) return () => ctrl.abort()
+    }
+
+    fetch(`https://api.github.com/repos/${repo}`, { signal: ctrl.signal })
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
         return res.json() as Promise<{ stargazers_count: number }>
       })
       .then((data) => {
-        writeCache(source.repo, data.stargazers_count)
+        writeCache(repo, data.stargazers_count)
         setState({ stars: data.stargazers_count, loading: false, fromFallback: false })
       })
       .catch(() => {
         /* keep last good value */
       })
     return () => ctrl.abort()
-  }, [source])
+  }, [repo])
 
   return state
 }

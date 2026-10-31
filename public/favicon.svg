@@ -1,30 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Jimmy Yao monogram">
   <style>
-    :root {
-      --paper: #f2ebd8;
-      --edge: #dccfb0;
-      --ink: #14110f;
-      --jade: #1f665e;
-      --amber: #b57823;
-    }
+    :root { --paper: #f6f5f1; --ink: #151413; --accent: #c2410c; }
     @media (prefers-color-scheme: dark) {
-      :root {
-        --paper: #0e0d0b;
-        --edge: #2a251f;
-        --ink: #ece3cd;
-        --jade: #5fb5ab;
-        --amber: #e0a23e;
-      }
+      :root { --paper: #141312; --ink: #ecebe6; --accent: #fb7a45; }
     }
   </style>
-
-  <rect width="64" height="64" rx="15" fill="var(--paper)"/>
-  <path fill="var(--edge)" d="M48 0h1c8.3 0 15 6.7 15 15v34c0 8.3-6.7 15-15 15H15C6.7 64 0 57.3 0 49v-1h38c5.5 0 10-4.5 10-10V0Z" opacity=".45"/>
-  <path fill="none" stroke="var(--jade)" stroke-width="4" stroke-linecap="round" d="M15 13h34M15 51h34"/>
-  <path fill="none" stroke="var(--amber)" stroke-width="5" stroke-linecap="round" d="M48 12 18 52"/>
-
-  <g fill="var(--ink)" font-family="Georgia, 'Times New Roman', serif" font-size="30" font-weight="700" letter-spacing="-4">
-    <text x="11" y="42">J</text>
-    <text x="33" y="42">Y</text>
-  </g>
+  <rect width="64" height="64" rx="14" fill="var(--paper)"/>
+  <text x="31" y="44" text-anchor="middle" fill="var(--ink)" font-family="Georgia, 'Times New Roman', serif" font-size="32" font-weight="500" letter-spacing="-2">JY</text>
+  <circle cx="50" cy="42" r="3.2" fill="var(--accent)"/>
 </svg>

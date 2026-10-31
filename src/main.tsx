@@ -3,7 +3,6 @@ import { createRoot, hydrateRoot } from 'react-dom/client'
 import { RouterProvider, createBrowserRouter } from 'react-router'
 import { appRoutes } from '@/router'
 import './styles/global.css'
-import './styles/home.css'
 
 const router = createBrowserRouter(appRoutes)
 const container = document.getElementById('root')!
