@@ -36,6 +36,14 @@ declare module 'page-flip' {
     getCurrentPageIndex(): number
     getPageCount(): number
     getOrientation(): 'portrait' | 'landscape'
+    /** Drag API (block-relative px). Used by our own touch handling. */
+    startUserTouch(pos: { x: number; y: number }): void
+    userMove(pos: { x: number; y: number }, isTouch: boolean): void
+    userStop(pos: { x: number; y: number }, isSwipe?: boolean): void
+    getRender(): {
+      getRect(): { left: number; top: number; width: number; height: number; pageWidth: number }
+      getOrientation(): 'portrait' | 'landscape'
+    }
     on(event: 'flip', cb: (e: PageFlipEvent<number>) => void): PageFlip
     on(event: 'changeOrientation', cb: (e: PageFlipEvent<string>) => void): PageFlip
     on(event: 'changeState', cb: (e: PageFlipEvent<string>) => void): PageFlip
