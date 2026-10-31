@@ -192,6 +192,10 @@ function Engine({
     for (const el of els) block.appendChild(el)
 
     const reduced = prefersReducedMotion()
+    // On touch screens the engine's own handler starts a fold whenever a
+    // finger rests for 250ms, which hijacks vertical scrolling. We turn it
+    // off there and use attachTouch() below instead.
+    const touch = window.matchMedia('(pointer: coarse)').matches
     const pf = new PageFlip(block, {
       width: layout.pageWidth,
       height: layout.pageHeight,
@@ -210,13 +214,16 @@ function Engine({
       mobileScrollSupport: true,
       swipeDistance: 24,
       autoSize: true,
+      useMouseEvents: !touch,
     })
     pf.loadFromHTML(els)
+    const detachTouch = touch ? attachTouch(block, pf, reduced) : undefined
     pf.on('flip', (e) => onFlipRef.current(e.data))
     pf.on('init', (e) => onFlipRef.current(e.data.page))
     flipRef.current = pf
 
     return () => {
+      detachTouch?.()
       flipRef.current = null
       pf.destroy()
     }
@@ -242,6 +249,117 @@ function Engine({
       )}
     </div>
   )
+}
+
+/**
+ * Touch gestures with a direction lock. The first ~10px of movement decide:
+ * mostly vertical is left to the browser (scrolling); mostly horizontal
+ * grabs the page edge and the sheet curls under the finger. Releasing past
+ * a third of the page (or a quick flick) finishes the turn; a tap near the
+ * outer edge turns the page.
+ */
+function attachTouch(block: HTMLElement, pf: PageFlip, reduced: boolean) {
+  const LOCK_PX = 10
+  let start: { x: number; y: number; t: number } | null = null
+  let lock: 'h' | 'v' | null = null
+  let origin = { x: 0, y: 0 }
+
+  const local = (t: Touch) => {
+    const r = block.getBoundingClientRect()
+    return { x: t.clientX - r.left, y: t.clientY - r.top }
+  }
+  const isControl = (el: EventTarget | null) =>
+    el instanceof Element && el.closest('a, button') !== null
+
+  // The edge to grab: right edge of the visible page to go forward, the
+  // left edge to go back. Coordinates are relative to the engine's block.
+  const edgeFor = (forward: boolean, y: number) => {
+    const rect = pf.getRender().getRect()
+    const portrait = pf.getRender().getOrientation() === 'portrait'
+    const pw = rect.pageWidth
+    const x = forward
+      ? rect.left + 2 * pw - 4
+      : portrait
+        ? rect.left + pw + 4
+        : rect.left + 4
+    return { x, y: Math.min(Math.max(y, rect.top + 4), rect.top + rect.height - 4) }
+  }
+
+  const onStart = (e: TouchEvent) => {
+    if (e.touches.length !== 1) {
+      start = null
+      return
+    }
+    const p = local(e.touches[0])
+    start = { ...p, t: Date.now() }
+    lock = null
+  }
+
+  const onMove = (e: TouchEvent) => {
+    if (!start || e.touches.length !== 1) return
+    const p = local(e.touches[0])
+    const dx = p.x - start.x
+    const dy = p.y - start.y
+    if (lock === null) {
+      if (Math.abs(dx) < LOCK_PX && Math.abs(dy) < LOCK_PX) return
+      lock = Math.abs(dx) > Math.abs(dy) ? 'h' : 'v'
+      if (lock === 'h') {
+        if (reduced) return
+        origin = edgeFor(dx < 0, start.y)
+        pf.startUserTouch(origin)
+      }
+    }
+    if (lock !== 'h') return
+    e.preventDefault()
+    if (reduced) return
+    pf.userMove({ x: origin.x + dx, y: origin.y + dy * 0.4 }, true)
+  }
+
+  const onEnd = (e: TouchEvent) => {
+    if (!start) return
+    const t = e.changedTouches[0]
+    const p = t ? local(t) : start
+    const dx = p.x - start.x
+    const elapsed = Date.now() - start.t
+
+    if (lock === 'h') {
+      if (reduced) {
+        if (Math.abs(dx) > 30) (dx < 0 ? pf.flipNext : pf.flipPrev).call(pf, 'bottom')
+      } else {
+        const pw = pf.getRender().getRect().pageWidth
+        // A flick, or a drag past a third of the page, finishes the turn:
+        // carry the fold past the spine so the engine completes it.
+        const commit = (elapsed < 300 && Math.abs(dx) > 30) || Math.abs(dx) > pw / 3
+        const end = commit
+          ? { x: origin.x + (dx < 0 ? -2.2 : 2.2) * pw, y: origin.y }
+          : { x: origin.x + dx, y: origin.y }
+        if (commit) pf.userMove(end, true)
+        pf.userStop(end)
+      }
+    } else if (lock === null && elapsed < 300 && !isControl(e.target)) {
+      // Tap near the outer edge of the visible page turns it.
+      const rect = pf.getRender().getRect()
+      const portrait = pf.getRender().getOrientation() === 'portrait'
+      const pageLeft = rect.left + (portrait ? rect.pageWidth : 0)
+      const pageRight = rect.left + 2 * rect.pageWidth
+      const zone = rect.pageWidth * 0.22
+      if (p.x > pageRight - zone) pf.flipNext('bottom')
+      else if (p.x < pageLeft + zone) pf.flipPrev('bottom')
+    }
+    start = null
+    lock = null
+  }
+
+  block.addEventListener('touchstart', onStart, { passive: true })
+  block.addEventListener('touchmove', onMove, { passive: false })
+  block.addEventListener('touchend', onEnd)
+  block.addEventListener('touchcancel', onEnd)
+  return () => {
+    block.removeEventListener('touchstart', onStart)
+    block.removeEventListener('touchmove', onMove)
+    block.removeEventListener('touchend', onEnd)
+    block.removeEventListener('touchcancel', onEnd)
+  }
 }
 
 function Controls({
