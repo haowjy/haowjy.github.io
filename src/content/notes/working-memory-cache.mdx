@@ -1,0 +1,95 @@
+---
+title: "A Working-Memory Cache for Agent File Reads"
+slug: "working-memory-cache"
+date: "2026-05-12"
+tags: ["ai", "agents", "llm", "proposal"]
+description: "A proposal: let the harness hold one current copy of each active file, instead of storing every read in the conversation."
+draft: true
+---
+
+# A Working-Memory Cache for Agent File Reads
+
+Across 4,339 agent sessions, [75% of file reads were redundant](/notes/75-percent-redundant-reads): the agent read a file it had already read in the same session. This post is a proposal for one fix and how I'd test it. I haven't built it yet, so there are no results here.
+
+## The problem: history as file storage
+
+Conversation history is a bad place to store mutable file state.
+
+It's a message history: user messages, assistant messages, tool calls, tool results, summaries, and whatever survives compaction. That's useful context. It isn't a good source of truth for what a file contains right now.
+
+In coding sessions it becomes one anyway. Every read appends a full snapshot of the file. Every edit may append another version. Later reads append the same file again. After a while the history holds several versions of one file, and the model has to infer the current one from whichever copy appears last. Then compaction summarizes the copies away and the agent reads the file again.
+
+## The mechanism
+
+The harness keeps a small LRU of recently touched files and attaches it to each model call as working memory. The stable system prompt defines the protocol. The attachment carries the volatile state: the file contents the model can rely on for this call.
+
+The message history stays normal, except that large file reads collapse once the contents live somewhere better:
+
+```text
+Read src/agent.ts
+[collapsed: file contents available in working memory, revision abc123]
+```
+
+The next model call carries the file in a separate attachment:
+
+```text
+<working_memory>
+  <file path="src/agent.ts" revision="abc123">
+    ...
+  </file>
+</working_memory>
+```
+
+If the model reads `src/agent.ts` again while it's resident, the harness returns an acknowledgment instead of another full copy:
+
+```text
+src/agent.ts is already available in working memory at revision abc123.
+```
+
+When a file falls out of the LRU, nothing needs recording. It stops appearing in working memory. A later read becomes a real read, returns the contents, and puts the file back in the cache.
+
+The model's rule stays simple: if a file is in working memory, that's the current copy. If it isn't, don't trust old snapshots in the history; read the file first.
+
+<WorkspaceCacheDiagram />
+
+This doesn't replace pruning. Pruning asks which old context can go: stale grep output, failed retry logs, broad search results, old test runs. Working memory asks where current mutable state should live. If the agent is still editing `src/agent.ts`, a lossy summary of the file isn't enough. It needs the file itself, with a revision marker and a clear rule for when it's resident.
+
+The trade is unbounded transcript growth for an explicit budget. History can pile up stale snapshots without limit. Working memory can't: the harness sets the maximum files, bytes, or tokens and the eviction policy. When the budget is full, something falls out and gets read again later.
+
+## Prior work
+
+This sits between context pruning, agent memory, and tool caching.
+
+The closest broad version I found is [ClawVM](https://arxiv.org/abs/2604.10352), which treats the agent harness as the place to manage working memory: typed pages with token budgets, minimum-fidelity invariants, lifecycle hooks, and writeback rules. Same direction, much bigger scope. This proposal only covers file state, one current copy per active file.
+
+The strongest experimental neighbor is [Simple Observation Masking](https://arxiv.org/abs/2508.21433). It compares masking old observations against LLM summarization for software-engineering agents and finds that simply dropping older observations can cut cost while matching or slightly improving solve rate. That's a good warning against overbuilding: a lot of agent history should just be dropped. Masking decides an old observation isn't worth showing. Working memory decides a file is still active and keeps exactly one current copy of it.
+
+[TVCache](https://arxiv.org/abs/2602.10986) caches tool results rather than file state. Its point is correctness: tool output depends on environment state, so a cached result is only safe to reuse when the tool history proves the state hasn't changed. A file cache needs the same caution. Track revisions or content hashes, invalidate on writes, and treat changes made outside the agent as misses.
+
+Prompt caching constrains where the block goes. OpenAI's prompt-caching docs recommend putting static content first and dynamic content last. Anthropic caches prefixes over tools, system, and messages, so a change early in the prompt invalidates everything after it. Working memory therefore belongs in call-scoped dynamic context at the end, never in the stable system prompt.
+
+I haven't found an experiment that tests this exact mechanism: a harness-managed LRU of current file contents, collapsed reads in history, acknowledgments for repeated reads, and filesystem-level measurement of whether re-reads fall.
+
+## How I'd test it
+
+Fewer re-reads isn't the goal. A cache that cuts re-reads but lowers the solve rate is a loss. A cache that barely changes re-reads but lowers the cost per solved task is a win. The primary metrics:
+
+1. task success rate
+2. cost per task
+3. cost per successful task
+
+```text
+cost_per_success = total_cost / successful_tasks
+```
+
+**Tasks.** SWE-bench (Verified, Lite, or Pro) for comparability; OpenAI has argued Verified no longer measures frontier models well because of contamination and flawed tests, and recommends Pro. Terminal-Bench 2.0 for long-horizon shell work, which is closer to the read-edit-reread loop. And a custom edit-heavy suite, because this is a harness change and should be tested on tasks that actually loop: read, edit, re-read, verify, edit again.
+
+**Conditions.** The same model, harness, and tasks with the cache off and on. Ablations: small, medium, and large cache; cache without the read acknowledgments; pruning only; pruning plus working memory.
+
+**Measurement.** Tool-call counts miss too much. Agents inspect files through `Read`, but also `cat`, `sed -n`, `grep`, `rg`, `git diff`, and inline pipelines. Mount the workspace through [LoggedFS](https://github.com/rflament/loggedfs) or a similar FUSE overlay so every read and write is logged with a path and timestamp, whatever tool caused it. Secondary metrics come from that log and the provider: total and uncached input tokens, output tokens, compactions, filesystem-level reads and repeated reads, repeated bytes, cache hits and invalidations, and peak working-memory size.
+
+**Guardrails.** Tests still pass, no more malformed patches or failed tool calls, no stale-cache incidents, and edit correctness holds on a hand-checked sample.
+
+**How it could fail.** Working memory could make every call heavy enough that input tokens stay flat even as re-reads fall. The model could misread the acknowledgments and act as if it never saw the file. The cache could miss a write made outside the agent and serve stale contents. Or the cache could be too small, so files churn through the LRU and re-reads barely move.
+
+My guess is that it helps most on edit-heavy tasks and much less on exploration, where pruning and prewritten `.context/` files probably do better. If that's what the numbers show, the cache should be a targeted fix for active files, not a general context-management scheme.

@@ -10,31 +10,25 @@ draft: true
 
 # 75% of LLM Reads Are Redundant
 
-<Callout type="errata" eyebrow="COST CORRECTION">
-Dollar amounts for Codex sessions were inflated by a cost-estimation bug — the formula double-counted cache-read tokens. Compaction averages dropped from $24.56/$2.18 to $20.16/$1.13 in the corrected run. The $15,068 three-month total and weekly cost ramp in the companion post are similarly overstated; corrected figures there show ~$17,200 over a re-run of the broader dataset. Read counts, redundancy percentages, and all structural analysis are unaffected.
-</Callout>
-
 I've been running AI coding agents heavily since February: Claude Code, Codex, OpenCode, plus a [multi-agent orchestration engine](https://github.com/haowjy/meridian-cli) I built on top of all three. After a [particularly expensive overnight session](/notes/what-happened-to-my-tokens), I wanted to understand my usage at scale. Not just one bad spawn. Everything.
 
-I wrote a script that pulls tool-call history from every session across all three harnesses. Claude Code stores sessions as JSONL. Codex has its own event format. OpenCode writes to SQLite. The script normalizes all three and extracts every file read: `Read` tool calls, `cat` and `sed` in bash, `grep` and `rg`. Then it tracks whether the agent had already seen that file earlier in the same session.
+I wrote a script that pulls tool-call history from every session across all three harnesses. Claude Code stores sessions as JSONL. Codex has its own event format. OpenCode writes to SQLite. The script normalizes all three and extracts every file read: `Read` tool calls, `cat` and `sed` in bash, `grep` and `rg`. Then it checks whether the agent had already seen that file earlier in the same session.
 
 The dataset covers 4,339 sessions from February through May 2026, across a dozen models, three harnesses, and 30+ agent roles.
 
 <FigureLead value="75.1%" label="of file reads were redundant" detail="50,319 of 67,017 reads across 4,339 sessions" />
 
-Three out of four file reads were repeats. In a single agent session, the agent would read a file, keep working, then read that same file again later.
+Three out of four file reads were repeats. The agent read a file, kept working, then read the same file again later in the same session.
 
-## What Agents Actually Do All Day
+## Where the repeats come from
 
-The redundancy clusters into three behaviors.
+**Read-edit-reread** is the biggest source. An agent reads a file, edits it, reads it back. I found 2,197 read-after-edit events across the dataset. The worst single session had 76.
 
-**Read-edit-reread** is the biggest. An agent reads a file, edits it, reads it back. Interestingly, recent versions of Claude Code's Read tool now include an injected instruction: a warning not to re-read a file immediately after editing it, because Edit/Write would have errored if the change failed and the harness tracks file state. I found this by checking the [tracked system prompt history](https://github.com/Piebald-AI/claude-code-system-prompts). The instruction isn't hardcoded in the tool description. It's injected through a template variable (`ADDITIONAL_READ_NOTE`) that was made configurable in v2.1.91 on April 3, 2026, which means it could be model-dependent or feature-flagged. Anthropic clearly noticed the same pattern. My data likely spans sessions both with and without the instruction, and I can't distinguish which. Either way, I found 2,197 read-after-edit events across the dataset. The worst single session: 76.
+**Delegation restarts context.** My setup spawns agents from agents, and each spawn starts with a fresh context window. The parent already read the files and knows what matters; the child starts blind and reads them again. Some of that is the price of delegation. The open question is how much a better handoff (file contents passed in the spawn, or prewritten `.context/` notes) would save.
 
-**Delegation restarts context.** My setup spawns agents from agents. Each spawn starts a fresh context window. The parent read the files and knows what matters; the child starts blind and re-reads everything. This is the expected cost of delegation. Fresh context means rediscovery. The question is whether better context handoff (passing file contents in the spawn, pre-digested `.context/` files) can reduce how much the child needs to re-read.
+**Compaction creates amnesia loops.** The agent fills its context, compacts it into a lossy summary, forgets the file contents, re-reads them, and fills the context again. Sessions that compacted averaged 67 reads and cost $20.16. Sessions without compaction averaged 13 reads and $1.13. One session compacted 29 times.
 
-**Compaction creates amnesia loops.** Agent fills context, compacts (lossy summary), forgets file contents, re-reads, fills context again. Sessions that compacted averaged 67 reads and cost $20.16. Sessions without: 13 reads, $1.13. One session compacted 29 times.
-
-## By Model
+## The model chart is a role chart
 
 <BarChart
   data={[
@@ -52,7 +46,7 @@ The redundancy clusters into three behaviors.
   caption="Redundancy rate by model (count = total reads). GPT-5.4 tops the chart with 80% redundancy across 10,730 reads."
 />
 
-GPT-5.4 at 80% redundancy. GPT-5.5 at 30%. It almost looks like a model quality story, where newer models learn not to re-read.
+GPT-5.4 at 80% redundancy. GPT-5.5 at 30%. It looks like newer models learned not to re-read.
 
 Then I sliced the same data by agent role:
 
@@ -73,13 +67,13 @@ Then I sliced the same data by agent role:
   caption="Redundancy rate by agent role (count = total reads). The role determines the rate, not the model."
 />
 
-The model chart is really a role chart. GPT-5.4 was my leaf coder and reviewer, reading, editing, and re-reading all day. GPT-5.5 was my orchestrator. It delegates instead of reading. GPT-5.4-mini was my explorer. It reads files, writes a report, and stops. The spread tracks how much editing a role does, not how smart the model is.
+The spread tracks the role, not the model. GPT-5.4 was my leaf coder and reviewer: reading, editing, and re-reading all day. GPT-5.5 was my orchestrator, and orchestrators delegate instead of reading. GPT-5.4-mini was my explorer, which reads files, writes a report, and stops. Redundancy follows how much editing a role does.
 
-The explorer number is interesting on its own. 42% redundancy is high for a role that should read once and report. When I dug in, the problem was compaction: explorers filling their context window, compacting, losing the file contents they'd already read, and re-reading them. That's what led me to build the `.context/CONTEXT.md` system: pre-synthesized knowledge files colocated with the code. An explorer can understand a module in a few hundred lines of markdown instead of reading 20 raw source files. It also pushed me to change how I dispatch explorers: scope each one tightly to a single question, fan out multiple cheap spawns instead of one that tries to read everything. Both changes cut the compaction-driven re-reads significantly.
+The explorer number still stood out. 42% is high for a role that should read once and report. When I dug in, the cause was compaction: explorers filled their context, compacted, lost the files they had read, and read them again. That's what led me to build `.context/CONTEXT.md` files: prewritten notes colocated with the code, so an explorer can understand a module from a few hundred lines of markdown instead of 20 source files. I also started scoping each explorer to a single question and fanning out several cheap spawns instead of one that reads everything. Both changes cut the compaction-driven re-reads significantly.
 
-## The Read-After-Edit Gap
+## The read-after-edit gap is mostly measurement
 
-My read-after-edit (RAE) metric measures how often an agent re-reads a file immediately after editing it. It showed a dramatic split by harness:
+My read-after-edit (RAE) metric counts how often an agent re-reads a file right after editing it. It split sharply by harness:
 
 <DataTable
   columns={[
@@ -102,9 +96,9 @@ My read-after-edit (RAE) metric measures how often an agent re-reads a file imme
   caption="Read-after-edit rates by model and harness. Claude models: 11-23%. Codex models: 0.2-4%."
 />
 
-Claude Code agents re-read after 11-23% of edits. Codex agents: 0.2-4%. A 10-100x difference, consistent across every model in each harness and every week in my [time-series tracker](https://github.com/haowjy/datadump/tree/main/where-my-tokens-went).
+Claude Code agents re-read after 11–23% of edits. Codex agents: 0.2–4%. A 10–100x difference, consistent across every model in each harness and every week in my [time-series tracker](https://github.com/haowjy/datadump/tree/main/where-my-tokens-went).
 
-I didn't trust it. So I pulled 3 Codex coder sessions and 3 Claude coder sessions and classified what happens immediately after every edit:
+I didn't trust it. So I pulled 3 Codex coder sessions and 3 Claude coder sessions and classified what happened immediately after every edit:
 
 <DataTable
   columns={[
@@ -123,13 +117,13 @@ I didn't trust it. So I pulled 3 Codex coder sessions and 3 Claude coder session
   caption="Post-edit behavior: what agents do immediately after an edit, classified from transcript samples."
 />
 
-Codex agents had zero explicit re-reads, but they did have 5 inline verifications (read-back embedded in the same bash command) and 14 `git diff` checks. Claude agents had 5 re-reads out of 42 edits, plus 10 test runs as the verification step. Both harnesses produce agents that verify their edits. The difference is the mechanism: Claude Code's separate `Read`/`Edit` tools make verification a distinct tool call that my analyzer counts. Codex's bash-based editing lets verification happen inside the same command or through `git diff`, which makes it invisible to a tool-call parser.
+Codex agents had zero explicit re-reads, but 5 inline verifications (a read-back inside the same bash command) and 14 `git diff` checks. Claude agents re-read after 5 of 42 edits and ran tests 10 times. Both verify their edits. They use different mechanisms. Claude Code's separate `Read` and `Edit` tools make verification a distinct tool call that my analyzer counts. Codex edits through bash, so verification hides inside the same command or a `git diff`, where a tool-call parser can't see it.
 
-The RAE gap is mostly a measurement artifact. A `git diff` after 12 edits is one command. Twelve separate `Read` calls after twelve `Edit` calls is 24 tool round-trips. The tool interface shapes what you can measure, not just what agents do.
+A `git diff` after 12 edits is one command. Twelve `Read` calls after twelve `Edit` calls is 24 tool round-trips. The tool interface shapes what you can measure as much as what agents do.
 
-## Do Newer Models Fix This?
+## Do newer models fix this?
 
-The data is suggestive but not conclusive.
+I can't tell.
 
 <DataTable
   columns={[
@@ -148,15 +142,13 @@ The data is suggestive but not conclusive.
   caption="Claude model generations. Opus 4.7 looks promising, but only 63 spawns."
 />
 
-Opus 4.7 has the lowest redundancy of any Claude model (32.8%) and a lower RAE rate than 4.6. But it's only 63 spawns. I started using it recently and mostly for design work. The role confounding is heavy. Opus 4.6 looks worse than 4.5, but 4.6 was my workhorse coder while 4.5 was used for design and orchestration.
+Opus 4.7 has the lowest redundancy of any Claude model (32.8%) and a lower RAE rate than 4.6. But that's 63 spawns, mostly design work. Opus 4.6 looks worse than 4.5, but 4.6 was my workhorse coder and 4.5 did design and orchestration. GPT-5.5's 29.5% comes almost entirely from orchestrator runs. To compare models fairly I'd need to run them in the same role on the same tasks.
 
-On the GPT side, 5.5 (29.5% redundancy) looks great, but it was almost exclusively my orchestrator. It delegates instead of reading. I'd need to run 5.5 as a coder against 5.4 as a coder on the same tasks to really compare.
+What the data does show: no model, on any harness, in any role, drops below 30% redundancy. The best case still re-reads about a third of its files.
 
-I can't tell from this data whether newer models are better at this. The role assignment confounds everything. What I *can* say is that no model, on any harness, in any role, drops below 30% redundancy. Even the best case is still re-reading a third of its files.
+Anthropic noticed the pattern too. Recent versions of Claude Code's Read tool inject an instruction not to re-read a file right after editing it, since Edit would have errored if the change failed. I found it in the [tracked system prompt history](https://github.com/Piebald-AI/claude-code-system-prompts). It's injected through a template variable (`ADDITIONAL_READ_NOTE`) made configurable in v2.1.91 on April 3, 2026, so it may be model-dependent or feature-flagged, and I can't tell which of my sessions had it.
 
-As for the "don't re-read" instruction, it's a Claude Code injection, and RAE is only a meaningful metric on Claude Code (Codex agents verify through `git diff` and inline commands that my parser doesn't count). So the question is narrow: does the instruction reduce RAE on the one harness where RAE measures what it claims to?
-
-I cut the Claude Code data at April 3, 2026, the v2.1.91 release date. Overall RAE drops slightly, from 21.1% before the release to 19.0% on or after it. But the role-controlled comparison points the other way: coder, architect, and reviewer all re-read more often after the cut.
+RAE only measures what it claims to on Claude Code, so that's where I tested it. I cut the Claude Code data at the v2.1.91 release date:
 
 <DataTable
   columns={[
@@ -177,209 +169,18 @@ I cut the Claude Code data at April 3, 2026, the v2.1.91 release date. Overall R
   caption="Claude Code read-after-edit before and after April 3, 2026. The comparable roles require at least 25 edits on both sides of the cut."
 />
 
-So I wouldn't claim the instruction helped. The aggregate number moves down, but the comparable role slices move up, and the post-release dataset has a lot of new roles that did not exist in the pre-release slice.
+The aggregate drops from 21.1% to 19.0%. The comparable roles go the other way: coder, architect, and reviewer all re-read more often after the cut. The post-release data also includes many roles that didn't exist before it. I wouldn't claim the instruction helped.
 
-## A "working memory" cache
+## What I'd do about it
 
-Conversation history is a bad place to store mutable file state.
+Prompting against re-reads hasn't clearly worked, and some re-reading is reasonable: an agent that just edited a file wants to know what's in it now. The waste is in where the file contents live. Every read appends another full copy of the file to the conversation, compaction throws those copies away, and the agent reads the file again.
 
-It is a message history: user messages, assistant messages, tool calls, tool results, summaries, and whatever survives compaction. That is useful context, but it is not a great source of truth for the current contents of a file.
-
-In coding sessions, it quietly becomes one anyway. Every read appends a full file snapshot. Every edit may append another version. Later reads append the same file again. After a while, the history contains multiple versions of the same file, and the model has to infer the current one from whichever copy appears latest.
-
-I want to prototype a "working memory" cache for this.
-
-The cache would be a small LRU of recently touched files, maintained by the harness and attached to each model call as workspace context. The stable prompt defines the protocol. The working memory attachment carries volatile state: the current file contents the model can rely on for this call.
-
-The message history stays normal. Large tool outputs are collapsed when the file contents are already available somewhere better.
-
-A read might appear in the message history like this:
-
-```text
-Read src/agent.ts
-[collapsed: file contents available in working memory, revision abc123]
-```
-
-The next model call includes the file in a separate working memory attachment:
-
-```text
-<working_memory>
-  <file path="src/agent.ts" revision="abc123">
-    ...
-  </file>
-</working_memory>
-```
-
-If the model reads `src/agent.ts` again while it is still resident, the harness returns a compact acknowledgment instead of appending another full copy:
-
-```text
-src/agent.ts is already available in working memory at revision abc123.
-```
-
-The model already has the current contents in the call-scoped attachment. The transcript does not need another copy.
-
-When a file falls out of the LRU, nothing special needs to be recorded. It simply stops appearing in working memory. A later read becomes a real read, returns the file contents, and repopulates the cache.
-
-The analogy is literal working memory: small, active, current, and local to the task. The message history remains a transcript of the interaction. It can explain how the session got here, but it should not store every current file snapshot.
-
-<WorkspaceCacheDiagram />
-
-This is not meant to replace pruning. It solves a narrower problem.
-
-Pruning asks which old context can be removed. A working memory cache asks where current mutable state should live. Old grep output, failed retry logs, broad search results, and stale test output are good pruning targets. Active files are different. If the agent is still editing `src/agent.ts`, a lossy summary of the file is usually not enough. The useful thing is the current file itself, with a revision marker and a clear rule for when it is resident.
-
-The cache trades accidental transcript growth for explicit working-memory budgeting. Message history can accumulate stale snapshots without limit. Working memory cannot, because the harness controls the budget: max files, max bytes, max tokens, and the eviction policy. If the budget is full, something falls out and has to be read again later.
-
-The model rule should stay simple: if a file is present in working memory, treat that as the current resident copy. If it is absent, do not rely on old snapshots from message history. Read the file before using its contents.
-
-## Prior work
-
-This idea sits between context pruning, agent memory, and tool caching.
-
-The closest broad version I found is [ClawVM](https://arxiv.org/abs/2604.10352), which treats the agent harness as the right place to manage working memory. ClawVM frames state as typed pages with token budgets, minimum-fidelity invariants, lifecycle hooks, and writeback rules. That is the same general direction: the harness should manage residency instead of leaving state scattered across a growing prompt. The prototype here is much narrower. It is not a general virtual memory system for all agent state. It is file-state working memory: one current resident copy per active file.
-
-The strongest experimental neighbor is [Simple Observation Masking](https://arxiv.org/abs/2508.21433). That work compares observation masking with LLM summarization for software-engineering agents and finds that simply omitting older observations can cut cost while matching or slightly improving solve rate. That is a good warning against overbuilding this. A lot of agent history probably should just be dropped.
-
-But masking is still different from working memory. Masking says: this older observation is no longer worth showing. Working memory says: this file is still active state, so keep one current copy in a controlled place and collapse the transcript copies.
-
-[TVCache](https://arxiv.org/abs/2602.10986) is another nearby idea, but it caches tool results rather than model-visible file state. Its key point is correctness: tool outputs depend on environment state, so reuse is only safe when the prior tool history proves the same state. A file working-memory cache needs the same conservatism. It should track revisions or content hashes, invalidate on writes, and treat out-of-band filesystem changes as cache misses.
-
-Prompt caching is the other constraint. OpenAI's prompt-caching documentation recommends putting static or repeated content at the beginning of the prompt and dynamic content at the end. Anthropic's docs describe cache prefixes over tools, system, and messages, which means changes earlier in the hierarchy can invalidate later cache regions. That argues against putting this in the stable system prompt. The working memory block should be call-scoped dynamic context, not a mutation of the behavioral prompt.
-
-So the shape I want is a hybrid:
-
-- pruning for old low-value observations
-- working memory for current resident files
-- filesystem logging for ground truth
-- prompt layout that keeps stable history stable and isolates dynamic file state
-
-I have not found an experiment that tests this exact mechanism: a harness-managed LRU of current file contents, collapsed file-read outputs in message history, cache-hit acknowledgments for repeated reads, and filesystem-level measurement of whether repeated file reads fall. That is the gap this prototype would test.
-
-## Experimental design
-
-The primary question is not whether the cache reduces reads.
-
-The primary question is whether it makes agents cheaper or better without hurting task completion. A cache that reduces rereads but lowers solve rate is bad. A cache that barely changes rereads but improves cost per successful task is useful.
-
-The top-level metrics should be:
-
-1. task completion
-2. cost per task
-3. cost per successful task
-
-For coding agents, task completion can be measured with benchmark pass rate or resolve rate. SWE-bench Verified is the familiar option: a human-filtered 500-task subset of SWE-bench. I would still use it for comparability, but not as the only benchmark. OpenAI has argued that SWE-bench Verified no longer measures frontier coding capability well because of contamination and flawed tests, and recommends SWE-bench Pro instead.
-
-Terminal-Bench is probably a better fit for the harness behavior I care about. Terminal-Bench 2.0 has 89 terminal-environment tasks across software engineering, machine learning, security, data science, and related workflows. It measures whether agents can complete long-horizon work through shell commands, files, tests, and debugging, which is closer to the repeated-read problem than a patch-only view.
-
-I would use three task sources:
-
-- SWE-bench Verified, SWE-bench Lite, or SWE-bench Pro for comparability with coding-agent results
-- Terminal-Bench for terminal-heavy tool use
-- an internal edit-heavy suite designed to stress repeated file access
-
-The custom suite matters because the cache is not a general intelligence intervention. It is a harness intervention. It should be tested on tasks that actually exercise the loop: read, edit, reread, verify, edit again.
-
-The experiment should compare at least two conditions:
-
-- Baseline: normal harness, no working memory cache
-- Treatment: same harness, same model, same task set, working memory cache enabled
-
-Useful ablations:
-
-- small cache
-- medium cache
-- large cache
-- cache without compact read acknowledgments
-- pruning-only baseline
-- pruning plus working memory
-
-Primary metrics:
-
-- task success / resolve rate / pass rate
-- total dollar cost
-- cost per task
-- cost per successful task
-- wall-clock time
-
-The most important aggregate is:
-
-```text
-cost_per_success = total_cost / successful_tasks
-```
-
-That catches the actual tradeoff. A treatment that saves 30% tokens but solves fewer tasks may or may not be worth it. A treatment that keeps pass rate flat and cuts cost per success is a win. A treatment that improves pass rate at the same cost is also a win.
-
-Filesystem-level repeated reads should be secondary. They explain why the cost moved, but they are not the goal.
-
-Tool-call metrics are not enough here. Agents inspect files through explicit `Read` calls, but also through `cat`, `sed -n`, `grep`, `rg`, `git diff`, and inline bash pipelines. If the measurement only counts tool calls, it will miss a lot of the behavior the cache is supposed to change.
-
-Mount the workspace through [LoggedFS](https://github.com/rflament/loggedfs), or a similar FUSE overlay, and run the agent normally on top of it. Every read and write gets logged with a timestamp and path regardless of which tool caused it.
-
-From there, build a per-file timeline:
-
-```text
-read  src/agent.ts at T1
-write src/agent.ts at T2
-read  src/agent.ts at T3
-read  src/agent.ts at T4
-```
-
-Secondary metrics:
-
-- total input tokens
-- uncached input tokens, if the provider exposes cache accounting
-- output tokens
-- number of compactions
-- number of explicit `Read` calls
-- number of shell-level file inspections
-- total filesystem-level reads
-- repeated filesystem-level reads
-- repeated filesystem-level bytes
-- read-after-edit rate
-- cache hits, misses, and invalidations
-- average and peak working-memory size
-
-Correctness guardrails:
-
-- benchmark tests pass
-- no increase in malformed patches
-- no increase in failed tool calls
-- no stale-cache incidents
-- no drop in edit correctness on manually inspected samples
-
-The important failure modes are measurable too.
-
-If working memory makes every call too heavy, total input tokens may stay flat or increase even while repeated reads fall. If the model misunderstands compact acknowledgments, task success or edit correctness will drop. If the cache misses out-of-band writes, the agent may act on stale contents. If the cache is too small, files churn through the LRU and repeated reads may not improve much.
-
-The experiment should report a cost-quality curve, not just a read-count delta:
-
-```text
-baseline pass rate:           X%
-baseline cost/task:           $Y
-baseline cost/success:        $Z
-
-working memory pass rate:     A%
-working memory cost/task:     $B
-working memory cost/success:  $C
-
-secondary deltas:
-  repeated reads:             ...
-  repeated bytes:             ...
-  compactions:                ...
-  cache hit rate:             ...
-  peak working memory size:   ...
-```
-
-The cache wins only if it improves cost per successful task, improves success rate at similar cost, or gives a better cost-quality tradeoff. Reducing rereads by itself is not enough.
-
-My guess is that the cache helps most on edit-heavy tasks. It may help less on exploration, where pruning or prewritten `.context/` files are probably better. That difference matters. A working memory cache should not be sold as general context management. It should be tested as a specific fix for active mutable file state.
-
-The point is to stop using message history as the source of truth for mutable file state. Keep the transcript as a transcript. Put current files in working memory, and measure whether agents complete tasks more cheaply or more reliably.
+I think the harness should hold the current contents of active files and stop storing them as transcript history. I wrote that up as a proposal, with prior work and an experiment design, in [A working-memory cache for agent file reads](/notes/working-memory-cache).
 
 <Callout type="note" eyebrow="METHODOLOGY">
-"Redundant" = agent read a file it already read earlier in the same session, measured at the tool-call level. Conservative: doesn't track partial re-reads proportionally, and as the transcript audit showed, misses verification that happens inside compound bash commands. The RAE split between harnesses is partly a measurement artifact of different tool interfaces. Cost estimates use published API pricing on actual token counts; subscription plans mask real cost. Sessions from all three harnesses are deduplicated where they overlap. Analysis scripts, time-series tracker, and April 3 before/after cut are on [GitHub](https://github.com/haowjy/datadump/tree/main/where-my-tokens-went).
+"Redundant" means the agent read a file it had already read earlier in the same session, counted at the tool-call level. It doesn't weight partial re-reads, and it misses verification inside compound bash commands, which is why the RAE split between harnesses is partly an artifact. Costs apply published API pricing to actual token counts; subscription plans hide real cost. An earlier version of this post double-counted Codex cache-read tokens; the costs above are corrected. Read counts and redundancy rates were unaffected. Scripts, the time-series tracker, and the April 3 cut are on [GitHub](https://github.com/haowjy/datadump/tree/main/where-my-tokens-went).
 </Callout>
 
 ---
 
-*4,339 sessions across Claude Code, Codex, and OpenCode. February through May 2026. 12 models, 30+ agent roles. See [What Happened to My Tokens?](/notes/what-happened-to-my-tokens) for the case study that started this analysis.*
+*4,339 sessions across Claude Code, Codex, and OpenCode, February through May 2026. 12 models, 30+ agent roles. [What Happened to My Tokens?](/notes/what-happened-to-my-tokens) is the case study that started this analysis.*
