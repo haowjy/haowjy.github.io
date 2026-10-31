@@ -3,24 +3,20 @@ title: "What Happened to My Tokens?"
 slug: "what-happened-to-my-tokens"
 date: "2026-05-11"
 tags: ["ai", "agents", "llm", "analysis"]
-description: "198 agent spawns ran overnight. The next morning, my Codex usage looked very different."
+description: "198 agent spawns ran overnight and half my Codex plan was gone by morning. The culprit was a parent agent that couldn't just wait."
 ogImage: "/og/default.png"
 draft: true
 ---
 
 # What Happened to My Tokens?
 
-<Callout type="errata" eyebrow="COST CORRECTION">
-The original cost estimates double-counted Codex cache-read tokens — adding them on top of input tokens instead of subtracting before pricing. The per-spawn costs below are corrected: $57.99 → $11.10, $22.24 → $4.46, $15.67 → $3.18. The three-spawn total drops from $95.90 to $18.74. The $15,068 three-month estimate is similarly overstated; reapplied to the broader dataset, the corrected total is ~$17,200 across 10,895 sessions. Read counts, redundancy percentages, and all structural analysis are unaffected.
-</Callout>
+The Codex $200 plan (20x) was so freeing. For weeks I could barely use half of it. Then one night I moved my full workflow over to Codex, and by morning half the plan was gone.
 
-The codex $200 plan (20x) was so freeing. For the past few weeks, I'd barely be able to use half. However, one night, as I swapped over the full workflow to Codex, 50% of it was gone overnight.
+I'm building [meridian-cli](https://github.com/haowjy/meridian-cli), a multi-agent orchestration engine that sits on top of Claude Code, Codex, and OpenCode. Agents spawn agents: a product lead spawns a tech lead, which spawns coders, reviewers, and smoke-testers. Each spawn gets a fresh context window. That night the job was a major architecture refactor, and meridian-cli ran 198 spawns over about eight hours while I slept.
 
-I'm building [meridian-cli](https://github.com/haowjy/meridian-cli), a multi-agent orchestration engine that sits on top of Claude Code, Codex, and OpenCode. Agents spawn agents: a product lead spawns a tech lead, which spawns coders, reviewers, and smoke-testers. Each spawn gets a fresh context window. For this job, a major architecture refactor, meridian-cli ran 198 spawns over about eight hours while I slept.
+My Codex usage went from about 60% remaining to about 10%.
 
-The next morning, my Codex usage had dropped from about 60% remaining to about 10%.
-
-That drop is what made me pull the session data apart. I wrote analysis scripts to read tool-call history from agent sessions and estimate cost per spawn. Three spawns jumped out: all qa-leads, all on Codex, all disproportionately expensive for the work they did.
+So I pulled the session data apart. I wrote scripts that read tool-call history from every spawn and estimate its cost at API rates. Three spawns stood out. All three were qa-leads, all ran on Codex, and all cost far more than the work they did.
 
 <DataTable
   columns={[
@@ -37,50 +33,28 @@ That drop is what made me pull the session data apart. I wrote analysis scripts 
     { cost: '$3.18', input: '5.5M', output: '25K', ratio: '220:1', duration: '10 min', work: 'reaper-escape-fix' },
   ]}
   highlightRow={0}
-  caption="Three qa-lead spawns: $18.74 total."
+  caption="Three qa-lead spawns out of 198, $18.74 between them."
 />
 
-Three spawns, $18.74. Across 198 spawns.
+The worst one cost $11.10. It pushed 20.9 million input tokens through GPT 5.4 in 36 minutes and wrote 26,000 tokens of output, an 800:1 ratio. It never delegated to an explorer. It read files itself, spawned 7 coders and 2 reviewers, then spent most of its budget polling for their results: 36 spawn-wait cycles, each one a full round-trip through its context window.
 
-The worst one -- $11.10 -- pushed 20.9 million input tokens through GPT 5.4 in 36 minutes and produced 26,000 tokens of output. An 800:1 input-to-output ratio. It didn't even delegate to an explorer. It read files directly, spawned 7 coders and 2 reviewers, then spent most of its budget polling for their results -- 36 spawn-wait cycles, each one a full round-trip through a 5.5 million token context window.
+## What I Fixed First
 
-<BarChart
-  data={[
-    { label: 'coder', value: 23.0, count: '$101' },
-    { label: 'qa-lead', value: 21.7, count: '$96', mute: false },
-    { label: 'reviewer', value: 19.4, count: '$86' },
-    { label: 'investigator', value: 5.9, count: '$26' },
-    { label: 'design-lead', value: 4.7, count: '$21' },
-    { label: 'explorer', value: 4.5, count: '$20' },
-    { label: 'tech-lead', value: 4.4, count: '$19' },
-  ]}
-  highlight="qa-lead"
-  caption="Cost by agent role (original uncorrected estimate — see errata). Corrected per-spawn costs are in the table above."
-/>
+I suspected the explorers before I suspected qa-lead.
 
-## What I Tried First
+Explorers are supposed to be the cheap reading layer. Some of mine were compacting over and over, losing their working state, and coming back with reports that looked incomplete. If the reading layer can't hold on to its own reading, every agent above it pays.
 
-My first suspicion was the explorer layer.
+I changed two things. First, explorers now start from synthesized project knowledge instead of raw source: `AGENTS.md` and `.context/CONTEXT.md` files colocated with the code, covering architecture, module contracts, and past decisions. I'm not sure the colocated files were essential; a prompt that pointed explorers at my existing knowledge base might have done as well. Second, I tightened the explorer description to one module or one question per spawn. Broad "go understand this area" prompts were exactly how explorers ended up in compaction churn.
 
-That was the visible problem. Explorers were supposed to be cheap reading agents, but some of them were compacting repeatedly, losing their working state, and returning reports that looked incomplete. If the reading layer can't retain the result of its own exploration, the whole delegation model gets expensive.
+The next explorer run cost $0.11, didn't compact, and wrote a better report. That number flatters it. Keeping the inline context current cost another $0.66 in code-mirror agents, so the fair figure is $0.77. Still cheaper than before.
 
-I tried two fixes there.
+qa-lead was a suspect too. Codex orchestrators had a habit of spawning a child and then poking around instead of waiting. That's why the spawn instructions had become blunt: every background spawn must be drained with `meridian spawn wait`, and when wait yields, call wait again immediately.
 
-First, I changed the explorer process: start from synthesized project knowledge before opening raw source. I already had a KB for this. It covered architecture, module contracts, rationale, and decisions. The qi-layer was a different delivery mechanism: `AGENTS.md` and `.context/CONTEXT.md` files colocated with the code, so the relevant context could be surfaced during normal filesystem traversal.
-
-I'm not sure qi was essential. A better explorer prompt that pointed at the KB first might have produced the same improvement. The measured change was narrower: this explorer stopped starting cold from source.
-
-The result looked good. A previous explorer run cost more and churned through compaction. The new run cost `$0.11`, did not compact, and produced a better report. That comparison is also too clean. Some cost moved upstream into maintaining the inline context. In this work item, the code-mirror agents cost another `$0.66`, so the fairer comparison is closer to the old explorer plus overhead versus `$0.77` for the new setup. Still cheaper, but not a free lunch.
-
-Second, I reread the explorer agent description and tightened the scope. The description now says to keep each explorer spawn to one module or one question. Cheap reading agents only stay cheap when the task is narrow enough for the smaller model to keep the relevant context in view. Broad "go understand this area" prompts were exactly how the explorer layer turned into compaction churn.
-
-I also knew qa-lead was a suspect. Codex orchestrators had done this before: spawn a child, then keep poking around instead of waiting cleanly. That was why the spawn instructions had become so blunt. `meridian-spawn` told agents that every background spawn must be drained with `meridian spawn wait`, and that when wait yielded they should call wait again immediately.
-
-I thought those changes were enough: cheaper explorer, tighter scope, explicit wait discipline. So when the explorer still looked expensive, I focused there first.
+Cheaper explorer, tighter scope, explicit wait instructions. I thought that covered it.
 
 ## The Transcript
 
-The third qa-lead transcript showed what was still happening. This was the cheapest of the three outliers -- $3.18 -- and it was already running with the improved explorer. Cleaned up from the raw Codex session log:
+The third qa-lead transcript says otherwise. It's the cheapest of the three outliers, $3.18, and it was already running with the improved explorer. Cleaned up from the raw Codex session log:
 
 ```
 ┌─ qa-lead (GPT 5.4 on Codex) ─────────────────────────┐
@@ -92,7 +66,7 @@ The third qa-lead transcript showed what was still happening. This was the cheap
      After spawning all subagents, you MUST run:
        meridian spawn wait"
 
-  [5.5M token context window. explorer running.]
+  [explorer running.]
 
   $ git diff main -- tests/unit/.../test_terminate_scope_sync.py \
       tests/unit/.../test_session_scope.py \
@@ -131,11 +105,11 @@ The third qa-lead transcript showed what was still happening. This was the cheap
 └────────────────────── total: $3.18, 639 seconds ────┘
 ```
 
-The explorer did its part. It finished in 265 seconds with a comprehensive KEEP/DELETE report for all 6 test files. The qa-lead -- after the system told it "you MUST run: meridian spawn wait" -- read the same files itself, pulled the explorer's full 51,000-token session transcript instead of the 2,000-token structured report, then wrote a cleanup strategy that closely mirrored what the explorer had already recommended.
+The system told it to run `meridian spawn wait`. Instead it ran 9 commands reading the same files the explorer was reading. When it finally waited, it pulled the explorer's full 51,000-token session transcript instead of the 2,000-token report. Then it wrote a cleanup strategy that closely matched what the explorer had already recommended.
 
 ## The Explorer Had the Answer
 
-An excerpt from the explorer's report:
+The explorer finished in 265 seconds with a KEEP/DELETE report for all 6 test files. An excerpt:
 
 ```
 ## tests/unit/platform/test_terminate_scope_sync.py
@@ -155,65 +129,75 @@ An excerpt from the explorer's report:
   [... 5 more files, same format ...]
 ```
 
-The qa-lead's final cleanup strategy -- written after all the redundant reading -- closely mirrored these recommendations. The 9 commands didn't produce meaningfully different conclusions. The explorer had the right answer. There's probably a smaller-model lesson in there too: for bounded reading tasks like this, GPT 5.4-mini was good enough, and I should be trying that lane more often.
+The qa-lead's 9 commands didn't change any of these conclusions. For a bounded reading task like this one, GPT 5.4-mini was good enough, and I should be using that lane more.
 
 <ComparisonBlock
   left={{
     eyebrow: "Explorer",
     value: "$0.11",
     label: "265 seconds, no compaction",
-    sublabel: "991K input tokens — used .context/ first",
+    sublabel: "991K input tokens, read .context/ first",
     tone: "accent"
   }}
   right={{
     eyebrow: "QA-lead",
     value: "$3.18",
     label: "639 seconds, 9 redundant reads",
-    sublabel: "5.5M input tokens — 220:1 input-to-output ratio",
+    sublabel: "5.5M input tokens, 220:1 input-to-output",
     tone: "amber"
   }}
 />
 
-Improving the delegate didn't fix the delegator. The explorer was already doing the right thing. The remaining problem was the parent orchestration path: on Codex, waiting still meant repeated model re-entry, and repeated re-entry kept creating opportunities to do extra work.
+Fixing the delegate didn't fix the delegator.
 
-## What I Changed Next
+## Why Waiting Costs Money on Codex
 
-After this audit, I changed qa-lead's default: Sonnet on Claude Code instead of GPT 5.4 on Codex. I don't have the clean A/B run yet -- same qa-lead task, same inputs, different harness -- so I shouldn't pretend this chart proves the replacement. It was a hypothesis based on the failure mode: if the expensive part was repeated wait re-entry, a harness with native blocking wait should remove that tax.
+When a Claude Code agent calls `spawn wait`, it blocks. One tool call, the agent sleeps, one result comes back when the child finishes.
+
+Codex works request-response. The agent issues a tool call, the harness returns a result, and the model reads its whole context window to decide what to do next. My harness can't hold that call open, so "wait" is implemented as a loop that yields back to the model every so often, and the model has to choose to wait again. Each yield is a full trip through the context window. Even with 97% cache hits, that adds up: this spawn took 5.5M input tokens to coordinate two children.
+
+Worse, every re-entry is another chance to do something other than wait. Read a file. Check a status. Peek at a transcript. The instruction said "you MUST run: meridian spawn wait," and the model still had to make that choice fresh each time. Given a big context window and a turn to fill, models find something to do.
+
+This isn't Codex's fault. Claude Code's tool-call model makes blocking waits natural. Codex's doesn't, and I hadn't built the workaround.
+
+The prompt fixes helped enough that I thought the problem was handled. They can't close it. As long as the harness keeps handing the turn back to the model, the model keeps getting chances not to wait. If waiting matters, the system should do the waiting.
+
+## What I Changed
+
+After this audit I moved qa-lead's default from GPT 5.4 on Codex to Sonnet on Claude Code. I haven't run the clean A/B yet (same qa-lead task, same inputs, different harness), so this is a bet on the failure mode: if the expensive part was re-entering the model to wait, a harness with a native blocking wait should remove it.
+
+The closest thing I have to evidence is a tech-lead from the same work item:
 
 <ComparisonBlock
   left={{
     eyebrow: "Tech-lead (Claude harness)",
     value: "$3.27",
     label: "10 children coordinated",
-    sublabel: "Native blocking wait — one tool call",
+    sublabel: "Native blocking wait, one tool call",
     tone: "accent"
   }}
   right={{
     eyebrow: "QA-lead (Codex harness)",
     value: "$3.18",
     label: "2 children coordinated",
-    sublabel: "Polling wait — 5.5M tokens per yield",
+    sublabel: "Polling wait, 5.5M input tokens total",
     tone: "amber"
   }}
 />
 
-Same work item, different role. The tech-lead ran on Claude, coordinated 10 child agents across 5 implementation phases, caught findings, ran a corrective phase, and shipped for $3.27. The qa-lead ran on Codex, coordinated 2 children, and cost $3.18. Five times the coordination for nearly the same price. That is not a controlled comparison -- tech-lead and qa-lead were doing different jobs -- but the asymmetry is hard to ignore. At minimum, the Claude run showed what efficient coordination looked like when waiting was actually blocking.
+The tech-lead ran on Claude, coordinated 10 child agents across 5 implementation phases, caught findings, ran a corrective phase, and shipped for $3.27. The qa-lead coordinated 2 children for $3.18. They were doing different jobs, so this isn't a controlled comparison. It does show what coordination costs when waiting actually blocks.
 
-The difference is how the harness handles waiting. When a Claude Code agent calls `spawn wait`, it blocks -- one tool call, the agent sleeps, one result when the child finishes. When a Codex agent does the same thing, my harness can't truly block. Codex's interaction model is request-response: the agent issues a tool call, the harness sends the result, the model processes the full context window and decides what to do next. To implement "wait," meridian yields control back to the session periodically, and the model has to re-enter and decide to keep waiting. Each yield is a full context-window round-trip. Even with 97% cache hits, 15 yields at 5.5M tokens each is real money.
+## What I'm Building Next
 
-And every re-entry is a chance for the model to do something other than wait. Read a file. Check a status. Peek at a transcript. The system said "you MUST run: meridian spawn wait" -- but every time the harness yielded, the model had to choose again, and models will always find something to do with their context window.
+The real fix belongs in the harness. Today `meridian spawn wait` is a CLI polling loop: it watches spawn state and yields a checkpoint to the parent while children are still running. Each checkpoint re-enters the parent model.
 
-This isn't Codex's fault. It's a gap in my harness. Claude Code's tool-call model happens to make blocking waits natural. Codex's doesn't, and I hadn't built the workaround yet.
+The streaming backends already keep live executions around: Codex through its `app-server` WebSocket, OpenCode through HTTP/SSE, and Claude Code through `stream-json`. So Meridian can hold the wait itself. It watches the child spawns and, when they finish, injects the result into the parent as its next user message. No polling loop in the parent's context, and no turns handed back to the model just so it can decide to keep waiting.
 
-## The Takeaway
+That removes the re-entry that made the Codex qa-lead expensive. Whether the qa-lead actually gets cheaper still needs a clean run.
 
-You can't always prompt your way into reliable orchestration. The spawn instructions were explicit: after `--bg`, wait; when wait yields, re-enter wait immediately. That reduced the problem enough that I thought it was handled. This transcript showed the limit of that approach. As long as the harness keeps re-entering the model, the model gets another chance to do something that is not waiting.
+## The Bill a Subscription Hides
 
-For today's models, reliability has to live partly in the harness. If waiting matters, the system should wait -- not ask the model to remember to keep waiting.
-
-## While I Had the Parser Open
-
-One side effect of doing this analysis: I got a better feel for how much work a flat-rate subscription can hide. Across the broader agent-session dataset, the API-rate estimate came out to about `$17,200` over three months. I did not pay that as API spend; the work ran through a messy mix of subscriptions, changing limits, and only some direct API-equivalent accounting.
+With the parser open, I ran it over everything. Across 10,895 sessions in three months, my agent work would have cost about $17,200 at API rates. I didn't pay that; it ran through a mix of subscriptions with changing limits. But it's a useful number to know when one night can eat half a plan.
 
 <CostRamp
   data={[
@@ -230,19 +214,11 @@ One side effect of doing this analysis: I got a better feel for how much work a 
     { period: 'W19', value: 4999, label: '' },
   ]}
   peak="W19"
-  caption="Estimated weekly cost at API rates, corrected for Codex cache-token double-counting."
+  caption="Estimated weekly cost at API rates."
 />
 
-## What I'm Building Next
-
-The Codex wait problem has a real systems fix. Today, `meridian spawn wait` is a CLI polling loop: it watches spawn state, then yields a checkpoint back to the harness when children are still running. That checkpoint re-enters the parent model, and the model has to choose to call `meridian spawn wait` again.
-
-The streaming backends already keep live executions around: Codex through its `app-server` WebSocket, OpenCode through HTTP/SSE, and Claude Code through `stream-json`. The missing piece is to move the wait barrier into Meridian's runtime. Instead of returning checkpoint messages to the model, Meridian can watch child spawns itself and inject the completed wait result into the parent execution as the next user message. No repeated model re-entry, no polling loop in the parent context, no context-window cycling just to keep waiting.
-
-That would eliminate the polling version of the harness tax. Whether the moved qa-lead actually gets cheaper still needs a clean run. The claim I can make now is narrower: this fix removes the repeated model re-entry that made the Codex qa-lead so expensive.
-
-The broader file-read analysis is in [75% of Reads Were Redundant](/notes/75-percent-redundant-reads): 50,319 redundant reads across 4,339 sessions, the compaction death spiral, and the per-model and per-role breakdowns.
+The file-read side of this is in [75% of LLM Reads Are Redundant](/notes/75-percent-redundant-reads): 50,319 redundant reads across 4,339 sessions, compaction loops, and the per-model and per-role breakdowns.
 
 ---
 
-*198 spawns across Claude Code and Codex. May 10--11, 2026. Broader file-read analysis covers 4,339 sessions, February--May 2026. Analysis scripts on [GitHub](https://github.com/haowjy/datadump/tree/main/where-my-tokens-went).*
+*198 spawns across Claude Code and Codex, May 10–11, 2026. Analysis scripts are on [GitHub](https://github.com/haowjy/datadump/tree/main/where-my-tokens-went). An earlier version of this note double-counted Codex cache-read tokens; the costs above are corrected.*
