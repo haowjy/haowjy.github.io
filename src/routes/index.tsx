@@ -1,6 +1,6 @@
 import { lazy, Suspense, useSyncExternalStore } from 'react'
 import { Link } from 'react-router'
-import { buildBookPages } from '@/components/book/pages'
+import StaticBook from '@/components/book/StaticBook'
 import ThemeToggle from '@/components/ui/ThemeToggle'
 
 const Book = lazy(() => import('@/components/book/Book'))
@@ -19,7 +19,7 @@ function useHydrated() {
 /**
  * Homepage: the book. The prerendered HTML carries every page as plain
  * stacked sheets (readable without JS, indexable); once hydrated, the
- * live page-turning book replaces them.
+ * scroll-turned WebGL book replaces them.
  */
 export default function HomeRoute() {
   const hydrated = useHydrated()
@@ -33,22 +33,13 @@ export default function HomeRoute() {
           <ThemeToggle />
         </nav>
       </header>
-      <main id="main" className="book-page__main">
+      <main id="main">
         {hydrated ? (
-          <Suspense fallback={<div className="book book--loading" />}>
+          <Suspense fallback={<StaticBook />}>
             <Book />
           </Suspense>
         ) : (
-          <div className="book-fallback">
-            {buildBookPages().map((p, i) => (
-              <article key={p.id} className={`pg pg--static${p.hard ? ' pg--hard' : ''} pg--${p.id}`}>
-                <div className="pg__inner">
-                  {p.content}
-                  {!p.hard && <span className="pg__folio">{i}</span>}
-                </div>
-              </article>
-            ))}
-          </div>
+          <StaticBook />
         )}
       </main>
     </div>

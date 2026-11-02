@@ -58,7 +58,7 @@ export const projects: Project[] = [
     name: 'Meridian Reader',
     when: 'Sep 2026 – now',
     description:
-      'An offline iOS read-aloud app running on-device TTS. Moving Kokoro from Core ML to ONNX Runtime cut its crashes from 5 in 20 calls to 0 in 320, at 3.3× real time on an iPhone 17 Pro.',
+      'An offline iOS read-aloud app running Phonon TTS on Core ML and Kokoro on ONNX Runtime. Moving Kokoro off Core ML cut its crashes from 5 in 20 calls to 0 in 320, at 3.3× real time on an iPhone 17 Pro.',
     stack: ['Swift', 'ONNX Runtime', 'Core ML'],
     starSource: null,
     links: [{ label: 'GitHub', href: 'https://github.com/haowjy/meridian-reader' }],

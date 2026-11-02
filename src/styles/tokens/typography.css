@@ -24,4 +24,7 @@
   --font-read: 'Newsreader Variable', 'Newsreader', Georgia, serif;
   --font-body: 'Instrument Sans Variable', 'Instrument Sans', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, monospace;
+  /* The homepage book. */
+  --font-book: 'Alegreya', Georgia, serif;
+  --font-book-sc: 'Alegreya SC', 'Alegreya', Georgia, serif;
 }
