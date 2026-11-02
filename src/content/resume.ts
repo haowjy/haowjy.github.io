@@ -67,7 +67,7 @@ export const experience: Role[] = [
     start: 'Jan 2020',
     end: 'Jun 2022',
     summary:
-      'Owned the health-data backend, built a posture-wearable Android app, and ported speech and facial stroke-screening models to a Flutter app with TensorFlow Lite.',
+      'Owned the health-data backend (Flask, Docker, MongoDB, AWS), built the aiSpine posture-wearable Android app, and ported speech and facial stroke-screening models to a Flutter app with TensorFlow Lite.',
   },
 ]
 

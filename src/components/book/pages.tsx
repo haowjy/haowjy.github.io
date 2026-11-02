@@ -1,39 +1,85 @@
 import { Link } from 'react-router'
 import { posts } from '@/content/notes'
 import { projects } from '@/content/projects'
-import { author, externalLinks, resumePdfHref } from '@/content/site'
+import { externalLinks, resumePdfHref } from '@/content/site'
 import { education, experience, research } from '@/content/resume'
 import { formatDate } from '@/lib/formatDate'
-import { Head, ProjectBlock, RoleBlock } from './PageParts'
-import type { BookPage } from './types'
+import { BackCover, Contents, Cover, ProjectBlock, RoleBlock } from './PageParts'
+import type { BookMode, BookPage } from './types'
 
-/** Contents entry: section label → page index. */
-type ContentsEntry = { label: string; page: number }
+/** Sections listed on the contents page, in reading order. */
+const SECTIONS = [
+  { anchor: 'about', label: 'About' },
+  { anchor: 'work', label: 'Work' },
+  { anchor: 'projects', label: 'Projects' },
+  { anchor: 'research', label: 'Research' },
+  { anchor: 'writing', label: 'Writing' },
+  { anchor: 'elsewhere', label: 'Elsewhere' },
+] as const
 
-/** Fired by the contents page; `<Book>` turns to `detail` (a page index). */
-export const BOOK_GOTO_EVENT = 'book:goto'
-
-function gotoPage(page: number) {
-  window.dispatchEvent(new CustomEvent(BOOK_GOTO_EVENT, { detail: page }))
+/** Index of the page that opens a section, or -1. */
+export function firstPageOf(pages: BookPage[], anchor: string) {
+  return pages.findIndex((p) => p.anchor === anchor)
 }
 
-export function buildBookPages(): BookPage[] {
-  const [voluma, epic, ...earlier] = experience
-  const contents: ContentsEntry[] = []
+/**
+ * Every page of the book, front cover to back. Page `i` is the front of
+ * leaf `i / 2` when even (a right-hand page) and its back when odd.
+ *
+ * The phone layout shows one right-hand page at a time, so there every
+ * content page moves to the right and the left-hand page facing it
+ * carries the section title instead.
+ */
+export function buildBookPages(mode: BookMode = 'spread'): BookPage[] {
+  const pages = paginate(contentPages(), mode)
+  // The contents page needs the final page numbers, so fill it in last.
+  const contents = pages.find((p) => p.id === 'contents')!
+  contents.content = (
+    <Contents
+      entries={SECTIONS.map((s) => ({ ...s, page: firstPageOf(pages, s.anchor) }))}
+    />
+  )
+  return pages
+}
 
-  const inner: BookPage[] = [
+function paginate(body: BookPage[], mode: BookMode): BookPage[] {
+  const front: BookPage[] = [
+    { id: 'cover', kind: 'cover', section: 'Cover', content: <Cover /> },
+    { id: 'endpaper-front', kind: 'endpaper', section: 'Contents' },
+  ]
+  const back: BookPage[] = [
+    { id: 'endpaper-back', kind: 'endpaper', section: 'Elsewhere' },
+    { id: 'back', kind: 'back', section: 'Back cover', content: <BackCover /> },
+  ]
+  const inner: BookPage[] = []
+  body.forEach((p, i) => {
+    if (mode === 'pan' && i > 0) {
+      inner.push({ id: `${p.id}-verso`, kind: 'verso', section: p.section })
+    }
+    inner.push(p)
+  })
+  // The back endpaper must land on a right-hand page (the front of the last leaf).
+  if (inner.length % 2) inner.push({ id: 'blank', kind: 'blank', section: '' })
+  return [...front, ...inner, ...back]
+}
+
+function contentPages(): BookPage[] {
+  const [voluma, epic, ...earlier] = experience
+  return [
+    { id: 'contents', kind: 'page', section: 'Contents' },
     {
       id: 'about',
+      kind: 'page',
       section: 'About',
       anchor: 'about',
       content: (
         <>
-          <Head section="About" />
           <h2 className="pg__title">About</h2>
           <div className="pg__prose">
             <p>
-              I&rsquo;m a software engineer focused on applying AI and LLMs to the real
-              world.
+              {/* A real element, not ::first-letter: the page textures can't draw that. */}
+              <span className="pg__drop">I</span>&rsquo;m a software engineer focused on
+              applying AI and LLMs to the real world.
             </p>
             <p>
               Right now I&rsquo;m co-founding{' '}
@@ -58,11 +104,11 @@ export function buildBookPages(): BookPage[] {
     },
     {
       id: 'work',
+      kind: 'page',
       section: 'Work',
       anchor: 'work',
       content: (
         <>
-          <Head section="Work" />
           <h2 className="pg__title">Work</h2>
           <RoleBlock role={voluma} full />
         </>
@@ -70,40 +116,36 @@ export function buildBookPages(): BookPage[] {
     },
     {
       id: 'work-2',
+      kind: 'page',
       section: 'Work',
-      content: (
-        <>
-          <Head section="Work" />
-          <RoleBlock role={epic} full />
-        </>
-      ),
+      content: <RoleBlock role={epic} full />,
     },
     {
       id: 'work-3',
+      kind: 'page',
       section: 'Work',
       content: (
         <>
-          <Head section="Work" />
           {earlier.map((r) => (
             <RoleBlock key={r.org} role={r} />
           ))}
           <section className="pg__entry">
-            <p className="pg__when">
+            <h3 className="pg__entry-title">{education.school}</h3>
+            <p className="pg__meta">
               {education.start} – {education.end}
             </p>
-            <h3 className="pg__entry-title">{education.school}</h3>
-            <p className="pg__entry-sub">{education.credential}</p>
+            <p className="pg__text">{education.credential}</p>
           </section>
         </>
       ),
     },
     {
       id: 'projects',
+      kind: 'page',
       section: 'Projects',
       anchor: 'projects',
       content: (
         <>
-          <Head section="Projects" />
           <h2 className="pg__title">Projects</h2>
           {projects.slice(0, 3).map((p) => (
             <ProjectBlock key={p.name} project={p} />
@@ -113,32 +155,26 @@ export function buildBookPages(): BookPage[] {
     },
     {
       id: 'projects-2',
+      kind: 'page',
       section: 'Projects',
-      content: (
-        <>
-          <Head section="Projects" />
-          {projects.slice(3).map((p) => (
-            <ProjectBlock key={p.name} project={p} />
-          ))}
-        </>
-      ),
+      content: projects.slice(3).map((p) => <ProjectBlock key={p.name} project={p} />),
     },
     {
       id: 'research',
+      kind: 'page',
       section: 'Research',
       anchor: 'research',
       content: (
         <>
-          <Head section="Research" />
-          <h2 className="pg__title">Research &amp; open source</h2>
+          <h2 className="pg__title">Research</h2>
           {research.map((r) => (
             <section key={r.title} className="pg__entry">
-              <p className="pg__when">{r.kind}</p>
               <h3 className="pg__entry-title">
                 <a href={r.href} target="_blank" rel="noreferrer">
                   {r.title}
                 </a>
               </h3>
+              <p className="pg__meta">{r.kind}</p>
               <p className="pg__text">{r.summary}</p>
             </section>
           ))}
@@ -147,22 +183,22 @@ export function buildBookPages(): BookPage[] {
     },
     {
       id: 'writing',
+      kind: 'page',
       section: 'Writing',
       anchor: 'writing',
       content: (
         <>
-          <Head section="Writing" />
           <h2 className="pg__title">Writing</h2>
           {posts.slice(0, 3).map((p) => (
             <section key={p.slug} className="pg__entry">
-              <p className="pg__when">
-                {formatDate(p.date)}
-                {p.draft && <span className="pg__draft">Draft</span>}
-              </p>
               <h3 className="pg__entry-title">
                 <Link to={`/notes/${p.slug}`}>{p.title}</Link>
               </h3>
-              {p.description && <p className="pg__text">{p.description}</p>}
+              <p className="pg__meta">
+                {formatDate(p.date)}
+                {p.draft && ' · draft'}
+              </p>
+              {p.description && <p className="pg__text pg__text--clamp">{p.description}</p>}
             </section>
           ))}
           <p className="pg__more">
@@ -172,14 +208,12 @@ export function buildBookPages(): BookPage[] {
       ),
     },
     {
-      id: 'contact',
+      id: 'elsewhere',
+      kind: 'page',
       section: 'Elsewhere',
-      anchor: 'contact',
-      // Inside of the back board.
-      hard: true,
+      anchor: 'elsewhere',
       content: (
         <>
-          <Head section="Elsewhere" />
           <h2 className="pg__title">Elsewhere</h2>
           <ul className="pg__links">
             {externalLinks.map((l) => (
@@ -202,65 +236,4 @@ export function buildBookPages(): BookPage[] {
       ),
     },
   ]
-
-  // Page 0 is the cover, page 1 the contents, inner pages start at 2.
-  inner.forEach((p, i) => {
-    if (p.anchor) contents.push({ label: p.section, page: i + 2 })
-  })
-
-  const pages: BookPage[] = [
-    {
-      id: 'cover',
-      section: 'Cover',
-      hard: true,
-      content: (
-        <div className="cover">
-          <h1 className="cover__name">{author.name}</h1>
-          <p className="cover__role">
-            Co-founder, Voluma Bio
-            <br />
-            Previously AI/ML at Epic Systems
-          </p>
-          <p className="cover__hint" aria-hidden="true">
-            Open me
-          </p>
-        </div>
-      ),
-    },
-    {
-      id: 'contents',
-      section: 'Contents',
-      hard: true,
-      content: (
-        <div className="endpaper">
-          <h2 className="pg__title">Contents</h2>
-          <ol className="contents">
-            {contents.map((c) => (
-              <li key={c.label}>
-                <button type="button" onClick={() => gotoPage(c.page)}>
-                  {c.label}
-                </button>
-                <span className="contents__dots" aria-hidden="true" />
-                <span className="contents__page">{c.page}</span>
-              </li>
-            ))}
-          </ol>
-        </div>
-      ),
-    },
-    ...inner,
-    {
-      id: 'back',
-      section: 'Back cover',
-      hard: true,
-      content: (
-        <div className="cover cover--back">
-          <p className="cover__blurb">
-            {author.description}
-          </p>
-        </div>
-      ),
-    },
-  ]
-  return pages
 }

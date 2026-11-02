@@ -8,24 +8,33 @@ The interface earns attention through type and restraint, not mechanics.
 
 ## Direction
 
-**A book you turn by hand.** The homepage (`/`) is a closed book on a
-desk. Grab a corner and the sheet peels and curls over with real
-shading; the covers and endpapers swing as rigid boards. Click a page
-edge, swipe, or press ← → to turn one spread; the contents page jumps.
-The closed book sits centered and slides so the spine is centered when
-it opens. Two-page spreads on wide screens, one page at a time on
-phones. Page type is set in container units, so a page reads the same at
-any size, and every page is checked to fit.
+**A book you turn by scrolling.** The homepage (`/`) is a closed
+hardcover on a desk. Scrolling turns it: one screen of scroll per leaf,
+scrubbed so a turn follows the finger and can be held halfway, then
+snapped to the nearest opening (past 12% of a turn it commits in the
+direction you were going). Nothing turns on hover. Paper leaves curl
+from the corner while the spine edge stays bound; the covers swing as
+rigid cloth boards; the gutter shadow stays at the spine of every open
+spread. ← → (buttons or keys) and the contents links scroll to an
+opening, so a long jump riffles through the pages instead of cutting.
+Two-page spreads on wide screens. Below 720px the camera sits on the
+right page with a sliver of the left one, every content page moves to
+the right, and the facing left page carries the section title. Page
+type is set in em of a font size that scales with the page, so a page
+reads the same at any size, and every page is checked to fit.
 
-The turn is drawn by StPageFlip (`page-flip`). It moves page elements
-around itself, so `components/book/Book.tsx` creates them outside React
-and renders each page's content into them with portals. The engine is
-rebuilt (at the same page) when the layout crosses orientation or size.
+The book is drawn in WebGL (three.js) by `components/book/engine.ts`,
+and the scroll is GSAP ScrollTrigger. Pages are HTML rendered by React,
+rasterized once into textures (html2canvas-pro). At rest the same HTML
+spread sits exactly over the drawn one with transparent ink, so links
+work and text selection highlights the drawn text. The textures can't
+draw CSS hyphenation or `::first-letter`, so page CSS avoids both.
 Reduced motion turns pages instantly. The URL hash follows the section
 on screen (`/#work`, `/#projects`) and opens the book there.
 
-Without JS (and in the prerendered HTML) the same pages render as plain
-stacked sheets.
+The book looks the same in both themes; only the desk follows the
+theme. Without JS, without WebGL, and in the prerendered HTML the same
+pages render as plain stacked sheets.
 
 **Plain view** (`/plain`): the same content as one scrolling index, a
 sticky rail plus a sheet of entries, for skimming and for anyone who
@@ -46,6 +55,7 @@ theme is set by an inline script before first paint.
 | Display / reading | Name, titles, About prose, note body | Newsreader (variable, optical size) |
 | UI | Entries, nav, captions, charts | Instrument Sans |
 | Mono | Dates, section labels, stack lists | JetBrains Mono |
+| Book | Every homepage page, the book's top bar | Alegreya, Alegreya SC |
 
 Light and dark share token names; dark overrides values.
 
@@ -88,6 +98,7 @@ Tried and removed:
 | Open Source section listing small fixes | If a contribution doesn't earn its space, it costs space |
 | Horizontal rules between project/resume rows | Typography already segments them |
 | Scroll-scrubbed page turns (2026-05 → 2026-10) | Scroll hijacking: 200vh of scrolling per page, pages could rest half-turned, and the turn was a flat rotation, not a page. Replaced by a hand-turned book |
+| StPageFlip hand-turned book (2026-10 → 2026-11) | Pages could turn with no click or scroll, and the turn didn't read as paper. Replaced by the scroll-turned WebGL book |
 | Article reading-progress bar | Flourish that nobody notices working but creates a visible line at rest |
 | Email in the footer | Public mailto = scrape bait. GitHub/LinkedIn/X cover legitimate inbound |
 
