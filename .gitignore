@@ -30,3 +30,4 @@ dist-ssr
 .playwright-cli
 
 # Meridian / mars tooling config (user-local, may contain personal preferences)
+mars.lock
